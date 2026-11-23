@@ -3,8 +3,10 @@
  *
  * MODIFIED FILE NOTICE: this file was added by Drylab (Drylab-AI) on
  * 2026-11-23 and changed again on 2026-11-23,
- * 2026-11-24 (polish, image tag 10.0.0.1-drylab.3) and
- * 2026-11-24 (comments only, image tag 10.0.0.1-drylab.4). It
+ * 2026-11-24 (polish, image tag 10.0.0.1-drylab.3),
+ * 2026-11-24 (comments only, image tag 10.0.0.1-drylab.4) and
+ * 2026-11-24 (spreadsheet and presentation look, image tag
+ * 10.0.0.1-drylab.5). It
  * restyles the editor chrome of ONLYOFFICE Docs, the original
  * software developed by Ascensio System SIA, and is part of a modified
  * version of that program licensed under the GNU AGPL v3 with the ONLYOFFICE
@@ -482,7 +484,7 @@
 /* ONLYOFFICE's own text, logo and copyright above stay untouched. */
 #about-menu-panel #id-about-licensor-info:after,
 #about-menu-panel #id-about-licensor-short:after {
-  content: "This is a modified version of ONLYOFFICE Docs, changed by Drylab on 2026-11-23 and 2026-11-24 (interface styling and layout only; build 10.0.0.1-drylab.3). Based on ONLYOFFICE Docs by Ascensio System SIA. Licensed under the GNU AGPL v3 with additional terms. Modified source: github.com/Drylab-AI/drylab-onlyoffice";
+  content: "This is a modified version of ONLYOFFICE Docs, changed by Drylab on 2026-11-23 and 2026-11-24 (interface styling and layout, and the spreadsheet grid line and selection colours; build 10.0.0.1-drylab.5). Based on ONLYOFFICE Docs by Ascensio System SIA. Licensed under the GNU AGPL v3 with additional terms. Modified source: github.com/Drylab-AI/drylab-onlyoffice";
   display: block;
   max-width: 420px;
   margin: 16px auto 0;
@@ -493,3 +495,130 @@
   color: #5C5C61;
   white-space: normal;
 }
+
+/* ---- 7. Spreadsheet: light grid, formula bar, sheet tabs (drylab.5) --- */
+/* Column letters / row numbers: drawn by sdkjs on the canvas, coloured
+   from these theme variables (Themes.js passes them to asc_setSkin at
+   start-up). Light grey, hairline borders, the selected header tinted with
+   the Drylab accent. The grid lines and the active-cell outline are sdkjs
+   constants, not variables: scripts/patch-js.sh sets those two. */
+:root body.theme-white {
+  --canvas-cell-title-background: #F8F9FA;
+  --canvas-cell-title-background-hover: #EEF1F4;
+  --canvas-cell-title-background-selected: #D3EEE1;
+  --canvas-cell-title-border: #E1E3E6;
+  --canvas-cell-title-border-hover: #D5D8DC;
+  --canvas-cell-title-border-selected: #9FD9BD;
+  --canvas-cell-title-text: #444746;
+  --canvas-select-all-icon: #B4B8BC;
+}
+/* Formula bar: name box, "fx", then the input, on one white line with a
+   hairline above and below, right under the toolbar pill. */
+:root body.theme-white .layout-item.middle:has(#cell-editing-box) { padding-top: 0; }
+:root body.theme-white #cell-editing-box {
+  background-color: #FFFFFF;
+  box-shadow: inset 0 1px 0 #E3E6EA, inset 0 -1px 0 #E3E6EA;
+  border: 0;
+}
+:root body.theme-white #cell-editing-box .ce-group-name,
+:root body.theme-white #cell-editing-box .ce-group-content { background-color: transparent; border: 0; }
+:root body.theme-white #cell-editing-box .ce-group-name #ce-cell-name {
+  border: 0;
+  border-right: 1px solid #E3E6EA;
+  border-radius: 0;
+  box-shadow: none;
+  background-color: transparent;
+  padding-left: 10px;
+  font-size: 13px;
+  color: #28282A;
+}
+:root body.theme-white #cell-editing-box .ce-group-name #ce-cell-name-menu button { background-color: transparent; }
+/* "fx" as text, like a spreadsheet's formula label (the icon is hidden, the
+   button and its "Insert function" tooltip/aria-label stay). */
+:root body.theme-white #cell-editing-box #ce-func-label {
+  margin-left: 4px;
+  border: 0;
+  border-radius: 4px;
+}
+:root body.theme-white #cell-editing-box #ce-func-label .icon { display: none; }
+:root body.theme-white #cell-editing-box #ce-func-label::after {
+  content: "fx";
+  display: block;
+  font: italic 600 13px/24px Georgia, "Times New Roman", serif;
+  color: #717176;
+  text-align: center;
+}
+:root body.theme-white #cell-editing-box .ce-group-content #ce-cell-content {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background-color: transparent;
+  font-size: 13px;
+  color: #28282A;
+}
+/* Sheet tabs at the bottom: flat, rounded, plain text; the active tab is
+   tinted with the accent. "+" (add sheet) and the sheet list stay first. */
+:root body.theme-white .statusbar #status-addtabs-box,
+:root body.theme-white .statusbar.no-compact #status-addtabs-box,
+:root body.theme-white .statusbar.no-compact #status-sheets-bar-box,
+:root body.theme-white .statusbar.no-compact #status-tabs-scroll {
+  border: 0;
+}
+:root body.theme-white .statusbar #status-sheets-bar .nav-tabs > li,
+:root body.theme-white .statusbar #status-sheets-bar .nav-tabs > li.active {
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  height: var(--statusbar-height, 26px);
+}
+:root body.theme-white .statusbar #status-sheets-bar .nav-tabs > li > span {
+  height: 20px;
+  line-height: 20px;
+  margin: 0 2px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 6px;
+  background-color: transparent;
+  box-shadow: none;
+  color: #5C5C61;
+  font-weight: 500;
+}
+:root body.theme-white .statusbar #status-sheets-bar .nav-tabs > li > span:hover {
+  border: 0;
+  background-color: #F1F3F4;
+  color: #28282A;
+}
+:root body.theme-white .statusbar #status-sheets-bar .nav-tabs > li.active > span,
+:root body.theme-white .statusbar #status-sheets-bar .nav-tabs > li.active > span:hover {
+  padding-top: 0;
+  border: 0;
+  background-color: #E6F5EE;
+  box-shadow: none;
+  color: #00803F;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+/* Status bar: selection stats (Sum, Count, Average...) stay on the right,
+   before zoom, in the same muted 11 px as the other status labels. */
+:root body.theme-white .statusbar #status-math-box label,
+:root body.theme-white .statusbar #status-filtered-box label {
+  font-size: 11px;
+  color: #717176;
+}
+
+/* ---- 8. Presentation: thumbnails and speaker notes (drylab.5) -------- */
+/* Thumbnails: already white with the accent outline on the selected slide
+   (--border-preview-select); a hairline separates them from the canvas.
+   Speaker notes: a slim white strip under the slide, hairline above. */
+:root body.theme-white #id_panel_thumbnails_split { box-shadow: inset -1px 0 0 #E3E6EA; }
+/* sdkjs sets the notes panel and its canvas background inline from
+   --canvas-background (the light canvas); the notes strip is white like a
+   slide editor's notes, so these need !important. The text inside is drawn
+   by sdkjs on a transparent overlay canvas and stays readable. */
+:root body.theme-white #id_bottom_pannels_container,
+:root body.theme-white #id_panel_notes,
+:root body.theme-white #id_panel_notes > #id_notes {
+  background-color: #FFFFFF !important;
+}
+:root body.theme-white #id_bottom_pannels_container { box-shadow: inset 0 1px 0 #E3E6EA; }

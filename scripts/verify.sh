@@ -6,7 +6,8 @@
 # comment, drylab.css is served, ONLYOFFICE's LICENSE.txt is untouched, and
 # the theme keeps the logo visible and carries the modified notice, and
 # NOTICE says where the integrator's notice line is shown and carries the
-# complete notices (the in-editor About entry is hidden since drylab.3).
+# complete notices (the in-editor About entry is hidden since drylab.3),
+# and the spreadsheet grid colour patch is served (drylab.5).
 #
 # With --browser it also runs the harness + headless agent-browser and
 # saves before/after screenshots and DOM facts to $OUT (see README).
@@ -17,7 +18,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 PORT="${PORT:-8085}"
 NAME="${NAME:-drylab-onlyoffice-verify}"
-IMAGE="${IMAGE:-drylab-onlyoffice:10.0.0.1-drylab.4}"
+IMAGE="${IMAGE:-drylab-onlyoffice:10.0.0.1-drylab.5}"
 OUT="${OUT:-$PWD/scripts/out/evidence}"
 BROWSER=0; KEEP=0
 for a in "$@"; do case "$a" in --browser) BROWSER=1 ;; --keep) KEEP=1 ;; esac; done
@@ -76,6 +77,24 @@ for needle in "Where the legal notices are shown" "Based on the open-source ONLY
   grep -qF "$needle" NOTICE || fail "NOTICE lacks: $needle"
 done
 ok "drylab.css served, modified notice present, logo not hidden; NOTICE says where the legal notices are"
+# drylab.5 (scripts/patch-js.sh): the served sdk-all.js carries the two
+# new grid constants (not the stock ones) and the spreadsheet Main.js the
+# blurfocus listener, plain and gzip, each with its modified-file line.
+sdk="http://127.0.0.1:${PORT}/sdkjs/cell/sdk-all.js"
+for enc in identity gzip; do
+  body=$(curl -sL --compressed -H "Accept-Encoding: $enc" "$sdk")
+  grep -qF 'this.TXa=new r(0,157,81);' <<<"$body" || fail "sdk-all.js ($enc) lacks the accent selection colour"
+  grep -qF 'border:new r(226,227,227)},padding:-1}' <<<"$body" || fail "sdk-all.js ($enc) lacks the light grid colour"
+  grep -qF 'this.TXa=new r(72,121,92);' <<<"$body" && fail "sdk-all.js ($enc) still has the stock selection colour"
+  grep -qF 'Modified by Drylab on' <<<"$body" || fail "sdk-all.js ($enc) has no modified-file line"
+done
+main="http://127.0.0.1:${PORT}/web-apps/apps/spreadsheeteditor/main/app/controller/Main.js"
+for enc in identity gzip; do
+  body=$(curl -sL --compressed -H "Accept-Encoding: $enc" "$main")
+  grep -qF "Common.Gateway.on('blurfocus'" <<<"$body" || fail "spreadsheet Main.js ($enc) lacks the blurfocus listener"
+  grep -qF 'Modified by Drylab on' <<<"$body" || fail "spreadsheet Main.js ($enc) has no modified-file line"
+done
+ok "sdk-all.js has the Drylab grid colours, spreadsheet Main.js the blurfocus listener (plain + gzip, modified-file lines)"
 docker exec -i "$NAME" cmp -s /var/www/onlyoffice/documentserver/LICENSE.txt /dev/stdin < LICENSE || fail "LICENSE differs from the image's LICENSE.txt"
 ok "LICENSE matches the upstream LICENSE.txt"
 docker exec "$NAME" test -f /var/www/onlyoffice/documentserver/DRYLAB-NOTICE.txt || fail "NOTICE not in the image"
@@ -124,6 +143,16 @@ assert j["info"], "File > Info did not open"
 for k in ("about", "users", "mode", "close", "review", "protect", "support", "help", "suggest"):
     assert not j[k], k + " is shown"
 print("ok: File > Info opens; About, Feedback & Support, Help, Suggest a Feature, users, mode switch, close, Collaboration and Protection hidden")'
+  done
+  # drylab.5: spreadsheet / presentation look (formula bar, headers, sheet
+  # tabs, thumbnails, notes) on a fresh open of each file.
+  for f in sales.xlsx deck.pptx; do
+    HARNESS_PORT="$HPORT" scripts/shoot.sh "$OUT" "look-${f%%.*}" "$f" >/dev/null
+    agent-browser eval "$(cat scripts/audit-sheets.js)" | python3 -c '
+import json, sys
+j = json.loads(json.loads(sys.stdin.read()))
+assert not j["issues"], j
+print("ok:", j["kind"], "look audit clean")'
   done
 fi
 echo "all checks passed"

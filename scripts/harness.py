@@ -353,7 +353,7 @@ class H(BaseHTTPRequestHandler):
         if data.get("status") in (2, 6) and data.get("url"):
             stem, ext = name.rsplit(".", 1)
             out = OUT / f"{stem}.saved.{data['status']}.{int(time.time() * 1000)}.{ext}"
-            url = data["url"].replace("http://host.docker.internal:8085", DS_INTERNAL)
+            url = data["url"].replace(os.environ.get("DS_CB_HOST", "http://host.docker.internal:8085"), DS_INTERNAL)
             with urllib.request.urlopen(url, timeout=60) as r:
                 out.write_bytes(r.read())
             entry.update(saved_to=out.name, bytes=out.stat().st_size)

@@ -12,6 +12,7 @@ export AGENT_BROWSER_SESSION="${AGENT_BROWSER_SESSION:-office-editor-p15}"
 WIDTHS="${WIDTHS:-1024 1280 1366 1440 1704 1920 390}"
 FILES="${FILES:-report.docx sales.xlsx deck.pptx}"
 mkdir -p "$OUT"; RES="$OUT/$PREFIX-results.jsonl"
+LOOK="$OUT/$PREFIX-look.jsonl"; [ "${RESUME:-0}" = 1 ] || : > "$LOOK"; touch "$LOOK"
 # RESUME=1 keeps earlier rows and skips (file, width) pairs already done.
 [ "${RESUME:-0}" = 1 ] || : > "$RES"; touch "$RES"
 iframe_js() { echo "(() => { const d=document.querySelector('iframe').contentDocument; $1 })()"; }
@@ -30,6 +31,11 @@ except Exception: print("")')
       [ -n "$tabs" ] && break
     done
     [ -n "$tabs" ] || { echo "$ext $w: FAILED to load" ; echo "{\"file\": \"$ext\", \"width\": $w, \"tabId\": \"load\", \"issues\": [\"editor did not load\"]}" >> "$RES"; continue; }
+    # Sheets / Slides look: one audit per (file, width) on load.
+    [ "$ext" != docx ] && agent-browser eval "$(cat "$HERE/audit-sheets.js")" | python3 -c "
+import sys,json
+v=json.loads(json.loads(sys.stdin.read())); v.update(file='$ext', width=$w)
+print(json.dumps(v))" >> "$LOOK"
     for t in $tabs; do
       agent-browser eval "$(iframe_js "const a=d.querySelector('#toolbar .tabs a[data-tab=\"$t\"]'); a.scrollIntoView({inline:'nearest'}); a.click(); return 1")" >/dev/null
       sleep 1.2
@@ -48,4 +54,11 @@ rows=[json.loads(l) for l in open(sys.argv[1])]
 bad=[r for r in rows if r['issues']]
 print(f"{len(rows)} tab x width checks, {len(bad)} with issues")
 for r in bad: print(r['file'], r['width'], r['tabId'], '|', '; '.join(r['issues'][:4]))
+PY
+python3 - "$LOOK" <<'PY'
+import json,sys
+rows=[json.loads(l) for l in open(sys.argv[1]) if l.strip()]
+bad=[r for r in rows if r.get('issues')]
+print(f"look: {len(rows)} file x width checks, {len(bad)} with issues")
+for r in bad: print(' ', r['file'], r['width'], '|', '; '.join(r['issues'][:6]))
 PY

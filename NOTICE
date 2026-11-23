@@ -14,9 +14,12 @@ refer to it only as "based on ONLYOFFICE Docs".
 Modified by: Drylab (GitHub organisation Drylab-AI)
 Date(s) of modification: 2026-11-23 (theme, image tag 10.0.0.1-drylab.1);
 2026-11-23 (layout v2, image tag 10.0.0.1-drylab.2); 2026-11-24 (polish,
-image tag 10.0.0.1-drylab.3)
+image tag 10.0.0.1-drylab.3); 2026-11-24 (notice line, image tag
+10.0.0.1-drylab.4); 2026-11-24 (spreadsheet and presentation look, image
+tag 10.0.0.1-drylab.5; includes one spreadsheet save fix)
 
-What was modified (web-apps only; server, sdkjs and binaries are unchanged)
+What was modified (web-apps, plus two colour constants in sdkjs since
+drylab.5; server and binaries are unchanged)
 ---------------------------------------------------------------------------
 
 1. Added web-apps/apps/common/main/resources/drylab/drylab.css (source:
@@ -76,6 +79,29 @@ What was modified (web-apps only; server, sdkjs and binaries are unchanged)
    - ONLYOFFICE's About entry in the left strip is HIDDEN, at the request
      of the integrator. See "Where the legal notices are
      shown" below.
+
+6. Spreadsheet and presentation look (2026-11-24, image tag
+   10.0.0.1-drylab.5):
+   - drylab.css (CSS): spreadsheet column letters and row numbers in a
+     light grey with hairline borders and the selected header tinted
+     green (ONLYOFFICE's own --canvas-cell-title-* theme variables); the
+     formula bar as one white line under the toolbar (cell name, an "fx"
+     label in place of the function icon, the formula input); flat,
+     rounded sheet tabs with the active one tinted green; muted selection
+     stats in the status bar; in presentations a white speaker-notes
+     strip under the slide and a hairline beside the thumbnails;
+   - sdkjs/cell/sdk-all.js: exactly two colour constants changed, the
+     cell grid lines (rgb 202,202,202 -> 226,227,227) and the active-cell
+     / selection outline (rgb 72,121,92 -> 0,157,81). A comment line at
+     the top of the file states the modification and its date (script:
+     scripts/patch-js.sh, run in the Dockerfile; the build fails if the
+     constants are not found exactly once). Nothing else in sdkjs changes;
+   - web-apps/apps/spreadsheeteditor/main/app/controller/Main.js: one event
+     listener added. The public API call docEditor.blurFocus() now also
+     closes the spreadsheet cell editor the way clicking another cell does,
+     so a cell the user is still typing in is kept when the integrator
+     saves from outside the editor. A comment line at the top of the file
+     states the modification and its date (same script).
 
 Where the legal notices are shown (since 10.0.0.1-drylab.4)
 ------------------------------------------------------------
