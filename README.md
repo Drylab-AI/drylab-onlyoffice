@@ -1,6 +1,6 @@
 # drylab-onlyoffice
 
-Drylab's modified build of ONLYOFFICE Docs Community 10.0.0.1 (current tag `10.0.0.1-drylab.3`, polish of 2026-11-24): the upstream image `onlyoffice/documentserver:10.0.0.1` plus one CSS theme. Based on ONLYOFFICE Docs by Ascensio System SIA. ONLYOFFICE is a trademark of Ascensio System SIA; this build is not an official ONLYOFFICE product.
+Drylab's modified build of ONLYOFFICE Docs Community 10.0.0.1 (current tag `10.0.0.1-drylab.4`, round 4 of 2026-11-24): the upstream image `onlyoffice/documentserver:10.0.0.1` plus one CSS theme. Based on ONLYOFFICE Docs by Ascensio System SIA. ONLYOFFICE is a trademark of Ascensio System SIA; this build is not an official ONLYOFFICE product.
 
 Licence: GNU AGPL v3 with the ONLYOFFICE additional terms (`LICENSE`, `NOTICE`). Anyone who uses this build over a network is entitled to this source.
 
@@ -30,17 +30,23 @@ The theme applies only when the integrator selects `customization.uiTheme: "them
 - Hidden by CSS (no Community config key): the Collaboration tab, the users counter, the Editing/Viewing switch, the header close button, the left-strip About entry.
 - Removed by the integrator's config: the Protection tab (`document.permissions.protect: false`); comments, track changes and chat stay off (`permissions.comment/review/chat: false`). Co-editing is unchanged.
 
+### Round 4 (2026-11-24, `10.0.0.1-drylab.4`)
+
+- No new hiding CSS. ONLYOFFICE's File > "Suggest a Feature" is removed by the integrator's config (`customization.suggestFeature: false`); "Feedback & Support" and Help were already off (`feedback: false`, `help: false`). `verify.sh --browser` checks all three stay hidden.
+- Comments in `drylab.css`, `NOTICE` ("Where the legal notices are shown"), this README and `verify.sh` follow the integrator's new notice line.
+- `scripts/harness.py`: `bar=v4` mock (no save icon, no (i), 16 px file icon, the notice line) and `suggestFeature: false` in its customization.
+
 ## Legal notices
 
-ONLYOFFICE's in-editor About entry is hidden since `drylab.3`. The complete legal notices (ONLYOFFICE copyright, modified by Drylab + date, AGPL v3 + additional terms, no warranty, source of the running version and upstream, licence link, trademark) are shown by the Drylab app in the "About this editor" (i) dialog of the bar above the editor, visible at every screen size, in en/vi/ja/zh. `NOTICE` has the full text. Inside the editor the ONLYOFFICE logo stays visible and File > Info still opens.
+ONLYOFFICE's in-editor About entry is hidden since `drylab.3`. Since `drylab.4` the Drylab app shows one muted line outside the editor frame, "Based on the open-source ONLYOFFICE Docs (AGPL v3)" (trademark sentence in its tooltip): at the right end of the bar above the editor from 1024 px wide, as a thin line under the editor below that, in en/vi/ja/zh. `NOTICE` has the complete notices. Inside the editor the ONLYOFFICE logo stays visible and File > Info still opens.
 
 ## Build and run (local only)
 
 ```bash
-docker build -t drylab-onlyoffice:10.0.0.1-drylab.3 .
+docker build -t drylab-onlyoffice:10.0.0.1-drylab.4 .
 docker run -d --name drylab-oo -p 127.0.0.1:8085:80 --add-host host.docker.internal:host-gateway \
   -e JWT_ENABLED=true -e JWT_SECRET=<secret> -e JWT_HEADER=AuthorizationJwt -e JWT_IN_BODY=true \
-  -e ALLOW_PRIVATE_IP_ADDRESS=true -e WOPI_ENABLED=false drylab-onlyoffice:local
+  -e ALLOW_PRIVATE_IP_ADDRESS=true -e WOPI_ENABLED=false drylab-onlyoffice:10.0.0.1-drylab.4
 ```
 
 These are the environment variables an integration needs (JWT in a custom header and in the body, private callback addresses allowed, WOPI off). Wait for `curl 127.0.0.1:8085/healthcheck` to return `true`, then about 30 s more while start-up regenerates the gzip copies.
@@ -57,11 +63,11 @@ The static checks are:
 - each editor's `index.html` (plain and gzip) links the theme and carries the modified notice;
 - the theme is served and has the modified-version notice;
 - no rule hides the logo (the check fails if one sets display none, visibility hidden, zero size or opacity below 0.4);
-- `NOTICE` says where the legal notices are shown now that About is hidden;
+- `NOTICE` says where the integrator's notice line is shown and carries the complete notices;
 - `LICENSE` matches the image's `LICENSE.txt`;
 - `NOTICE` ships in the image.
 
-`--browser` starts `scripts/harness.py`, a stand-in for the Drylab backend that signs configs and receives saves. It opens a docx, an xlsx and a pptx in headless `agent-browser`, and asserts the theme is applied, the logo is visible and not covered, File > Info opens, and the hidden items (About entry, Collaboration and Protection tabs, users counter, mode switch, close button) stay hidden. It saves the screenshots and DOM facts to `scripts/out/evidence/`. The test browser runs with `--disable-web-security` only so `probe.js` can read the DocServer iframe.
+`--browser` starts `scripts/harness.py`, a stand-in for the Drylab backend that signs configs and receives saves. It opens a docx, an xlsx and a pptx in headless `agent-browser`, and asserts the theme is applied, the logo is visible and not covered, File > Info opens, and the hidden items (About entry, Collaboration and Protection tabs, users counter, mode switch, close button, and with the integrator's config Feedback & Support, Help and Suggest a Feature) stay hidden. It saves the screenshots and DOM facts to `scripts/out/evidence/`. The test browser runs with `--disable-web-security` only so `probe.js` can read the DocServer iframe.
 
 Manual checks used for the first release (2026-11-23), all on 127.0.0.1:
 
@@ -69,7 +75,7 @@ Manual checks used for the first release (2026-11-23), all on 127.0.0.1:
 - `downloadAs('pdf')` returns a PDF;
 - Insert > Image > Image from storage, signed `insertImage`;
 - File > Rename (with the integrator event wired); File > Version History absent once the integrator drops the history events (layout v2);
-- About shows the Ascensio System SIA details plus the modified notice (until drylab.2; from drylab.3 the integrator's (i) dialog shows the notices).
+- About shows the Ascensio System SIA details plus the modified notice (until drylab.2; drylab.3 the integrator's (i) dialog; since drylab.4 the integrator's notice line).
 
 Responsive sweep (drylab.3): `scripts/sweep.sh <out> <prefix>` with the harness running opens each fixture at each width, clicks every visible tab, screenshots it and runs `scripts/audit.js` (wrapped captions, controls outside the pill, overlaps, clipped text, hidden items shown).
 

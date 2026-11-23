@@ -5,8 +5,8 @@
 # index.html (plain and gzip) links drylab.css with the "Modified by Drylab"
 # comment, drylab.css is served, ONLYOFFICE's LICENSE.txt is untouched, and
 # the theme keeps the logo visible and carries the modified notice, and
-# NOTICE says where the legal notices are shown (the in-editor About entry
-# is hidden since drylab.3).
+# NOTICE says where the integrator's notice line is shown and carries the
+# complete notices (the in-editor About entry is hidden since drylab.3).
 #
 # With --browser it also runs the harness + headless agent-browser and
 # saves before/after screenshots and DOM facts to $OUT (see README).
@@ -17,7 +17,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 PORT="${PORT:-8085}"
 NAME="${NAME:-drylab-onlyoffice-verify}"
-IMAGE="${IMAGE:-drylab-onlyoffice:10.0.0.1-drylab.3}"
+IMAGE="${IMAGE:-drylab-onlyoffice:10.0.0.1-drylab.4}"
 OUT="${OUT:-$PWD/scripts/out/evidence}"
 BROWSER=0; KEEP=0
 for a in "$@"; do case "$a" in --browser) BROWSER=1 ;; --keep) KEEP=1 ;; esac; done
@@ -66,10 +66,11 @@ for sel, body in re.findall(r"([^{}]+)\{([^{}]*)\}", css):
     if re.search(r"display:none|visibility:hidden|width:0[;p]|height:0[;p]", b) or (m and float(m.group(1)) < 0.4):
         sys.exit(f"hides logo: {sel.strip()}")
 PY
-# drylab.3: the left-strip About entry is hidden on purpose; the legal
-# notices move to the integrator's (i) dialog. NOTICE must say so, and must
-# carry the full notice text that dialog shows.
-for needle in "Where the legal notices are shown" "WITHOUT ANY WARRANTY" "(c) Ascensio System SIA" \
+# drylab.3: the left-strip About entry is hidden on purpose. drylab.4: the
+# integrator shows one notice line outside the frame. NOTICE must say where
+# that line is, and must carry the complete notices itself.
+for needle in "Where the legal notices are shown" "Based on the open-source ONLYOFFICE Docs (AGPL v3)" \
+  "WITHOUT ANY WARRANTY" "(c) Ascensio System SIA" \
   "https://github.com/Drylab-AI/drylab-onlyoffice" "https://github.com/ONLYOFFICE/DocumentServer" \
   "ONLYOFFICE is a trademark of Ascensio System SIA"; do
   grep -qF "$needle" NOTICE || fail "NOTICE lacks: $needle"
@@ -114,14 +115,15 @@ PY
       const tabs = [...d.querySelectorAll('#toolbar .tabs li.ribtab a')].filter((a) => a.offsetParent).map((a) => a.dataset.tab);
       return JSON.stringify({ info: shown('#panel-info') && d.querySelector('#panel-info').innerText.trim().length > 0,
         about: shown('#left-btn-about'), users: shown('#tlb-box-users'), mode: shown('#slot-btn-edit-mode'), close: shown('#slot-btn-close'),
-        review: tabs.includes('review'), protect: tabs.includes('protect') });
+        review: tabs.includes('review'), protect: tabs.includes('protect'),
+        support: shown('#left-btn-support'), help: shown('#fm-btn-help'), suggest: shown('#fm-btn-suggest') });
     })()" | python3 -c '
 import json, sys
 j = json.loads(json.loads(sys.stdin.read()))
 assert j["info"], "File > Info did not open"
-for k in ("about", "users", "mode", "close", "review", "protect"):
+for k in ("about", "users", "mode", "close", "review", "protect", "support", "help", "suggest"):
     assert not j[k], k + " is shown"
-print("ok: File > Info opens; About entry, users, mode switch, close, Collaboration and Protection hidden")'
+print("ok: File > Info opens; About, Feedback & Support, Help, Suggest a Feature, users, mode switch, close, Collaboration and Protection hidden")'
   done
 fi
 echo "all checks passed"

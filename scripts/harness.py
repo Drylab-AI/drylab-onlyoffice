@@ -52,6 +52,8 @@ CUSTOMIZATION = {
     "toolbarHideFileName": True,
     "help": False,
     "feedback": False,
+    # : no File > "Suggest a Feature".
+    "suggestFeature": False,
     "uiTheme": "theme-white",
     "features": {"tabStyle": "line", "tabBackground": "toolbar", "featuresTips": False},
     "hideRightMenu": True,
@@ -159,7 +161,7 @@ PAGE = """<!doctype html><html><head><meta charset="utf-8"><title>harness {name}
 <style>html,body{{margin:0;height:100%}}body{{display:flex;flex-direction:column}}#ed-wrap{{flex:1;min-height:0}}#ed{{height:100%}}{barcss}</style>
 <script>window.__t0 = performance.now(); window.__events = [];</script>
 <script src="{ds}/web-apps/apps/api/documents/api.js"></script></head>
-<body>{bar}<div id="ed-wrap"><div id="ed"></div></div><script>
+<body>{bar}<div id="ed-wrap"><div id="ed"></div></div>{foot}<script>
 const cfg = {cfg};
 const q = (p) => fetch(p).then(r => r.json());
 const ev = (s) => window.__events.push(s);
@@ -181,8 +183,11 @@ window.docEditor = new DocsAPI.DocEditor('ed', cfg);
 # bottom border, save state in words). ``bar=v2`` (default): layout v2, no
 # border, save state as a cloud icon, the same title x the theme's
 # --drylab-menu-indent assumes (93 px from 640 px up, 57 px below).
-# ``bar=v3`` (default ): 15 px title and Save instead of Done, same
-# title x. ``bar=none`` drops it. Static HTML: it only has to look like the real bar.
+# ``bar=v3``: 15 px title and Save instead of Done, same title x.
+# ``bar=v4`` (default ): no save cloud, no (i), a 16 px file icon in
+# the 24 px slot, the muted notice line at the right (a thin line under the
+# editor below 1024 px). ``bar=none`` drops it. Static HTML: it only has to
+# look like the real bar.
 ICONS = {
     "back": '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
     "download": '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
@@ -212,12 +217,33 @@ BAR_CSS = """
 #bar.v3 .title{font-size:15px;line-height:24px}
 #bar.v3 .done{height:32px;font-size:13px;padding:0 14px}
 #bar.v3 .share{height:32px;font-size:13px;padding:0 14px}
+#bar.v4 .title{font-size:15px;line-height:24px}
+#bar.v4 .done{height:32px;font-size:13px;padding:0 14px}
+#bar.v4 .share{height:32px;font-size:13px;padding:0 14px}
+#bar.v4 .fi{display:inline-flex;align-items:center;justify-content:center;background:none!important}
+#bar .note{font-size:11px;line-height:16px;color:#8A8A8F;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#foot-note{font-size:11px;line-height:16px;color:#8A8A8F;text-align:center;padding:3px 12px;border-top:1px solid #F2F2F2;background:#fff;flex-shrink:0}
+@media (min-width:1024px){#foot-note{display:none}}
+@media (max-width:1023px){#bar .note{display:none}}
+@media (max-width:639px){#bar.v4 .fi{display:none}}
 @media (max-width:639px){#bar{gap:4px;padding:0 4px;height:56px}#bar .ib{width:44px;height:44px}#bar .fi,#bar .lbl,#bar .dl,#bar .st .lbl{display:none}#bar .share{height:44px;padding:0 12px}#bar .done{height:44px;padding:0 12px}}
 """
 
 
+NOTE = "Based on the open-source ONLYOFFICE Docs (AGPL v3)"
+FILE_ICON_V4 = '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>'
+
+
 def bar_html(name: str, version: str) -> str:
     color = FILE_COLORS.get(name.rsplit(".", 1)[-1], "#717176")
+    if version == "v4":
+        icon = (f'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{color}" stroke-width="2" '
+                f'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{FILE_ICON_V4}</svg>')
+        return (f'<header id="bar" class="v4" data-drylab-bar="v4"><span class="ib">{svg("back")}</span>'
+                f'<span class="fi">{icon}</span><span class="title" id="bar-title">{name}</span>'
+                f'<span class="sp"></span><span class="note" title="ONLYOFFICE is a trademark of Ascensio System SIA.">{NOTE}</span>'
+                f'<span class="ib dl" title="Download">{svg("download")}</span>'
+                f'<span class="share">{svg("users", 16)}<span class="lbl">Share</span></span><span class="done">Save</span></header>')
     status = (f'<span class="st">{svg("cloud", 16)}<span class="lbl">All changes saved</span></span>' if version == "v1"
               else f'<span class="st" title="All changes saved">{svg("cloud", 18)}</span>')
     about = f'<span class="ib{" sm" if version != "v1" else ""}" title="About this editor">{svg("info", 18 if version != "v1" else 20)}</span>'
@@ -275,9 +301,10 @@ class H(BaseHTTPRequestHandler):
             events = "" if q.get("events") == "none" else (DRYLAB_EVENTS if q.get("cfg") == "v1" else DRYLAB_EVENTS_V2).format(
                 qname=urllib.parse.quote(name), qs=urllib.parse.quote(s)
             )
-            bar_v = q.get("bar", "v3")
+            bar_v = q.get("bar", "v4")
             bar = "" if bar_v == "none" else bar_html(name, bar_v)
-            page = PAGE.format(name=name, ds=DS_BROWSER, cfg=json.dumps(cfg), events=events, bar=bar, barcss=BAR_CSS if bar else "")
+            foot = f'<div id="foot-note" title="ONLYOFFICE is a trademark of Ascensio System SIA.">{NOTE}</div>' if bar_v == "v4" else ""
+            page = PAGE.format(name=name, ds=DS_BROWSER, cfg=json.dumps(cfg), events=events, bar=bar, foot=foot, barcss=BAR_CSS if bar else "")
             return self._send(200, page, "text/html; charset=utf-8")
         if u.path == "/insert-image":
             return self._send(200, insert_image_payload())

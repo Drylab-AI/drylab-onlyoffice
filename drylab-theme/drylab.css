@@ -2,8 +2,9 @@
  * Drylab theme for ONLYOFFICE Docs Community 10.0.0.1 (web-apps).
  *
  * MODIFIED FILE NOTICE: this file was added by Drylab (Drylab-AI) on
- * 2026-11-23 and changed again on 2026-11-23 and
- * 2026-11-24 (polish, image tag 10.0.0.1-drylab.3). It
+ * 2026-11-23 and changed again on 2026-11-23,
+ * 2026-11-24 (polish, image tag 10.0.0.1-drylab.3) and
+ * 2026-11-24 (comments only, image tag 10.0.0.1-drylab.4). It
  * restyles the editor chrome of ONLYOFFICE Docs, the original
  * software developed by Ascensio System SIA, and is part of a modified
  * version of that program licensed under the GNU AGPL v3 with the ONLYOFFICE
@@ -13,10 +14,15 @@
  * Rules kept here (licence gates, see NOTICE):
  * - The ONLYOFFICE logo stays visible: smaller and muted, never hidden or
  *   covered.
- * - Since drylab.3 the left-strip About entry is hidden (user request); the
- *   complete legal notices are shown by the integrator instead (the Drylab
- *   bar's (i) dialog) and in NOTICE. The About panel itself is unchanged
- *   and still carries our modified-version line below.
+ * - Since drylab.3 the left-strip About entry is hidden (user request).
+ *   Since drylab.4 the integrator shows one line outside the frame, "Based
+ *   on the open-source ONLYOFFICE Docs (AGPL v3)" (see NOTICE, "Where the
+ *   legal notices are shown"); the full notices are in NOTICE. The About
+ *   panel itself is unchanged and still carries our modified-version line
+ *   below.
+ * - ONLYOFFICE's "Feedback & Support", "Help" and "Suggest a Feature"
+ *   entries are hidden by the integrator's config (customization.feedback,
+ *   help and suggestFeature: false), not by CSS (checked by verify.sh).
  * - Layout and spacing feel only; Drylab colours, no third-party marks.
  *
  * How it works: CSS only, loaded by a <link> in each editor's index.html
@@ -202,11 +208,10 @@
 :root body.theme-white #toolbar .tabs li:has(> a[data-tab="review"]) {
   display: none !important;
 }
-/* Left strip About: hidden . The legal
-   notices it carried are shown instead in the Drylab bar's (i) dialog
-   (full ONLYOFFICE attribution, AGPL v3 + additional terms, warranty
-   disclaimer, source links) and in NOTICE; File > Info still opens and the
-   ONLYOFFICE logo stays visible in the menu row. */
+/* Left strip About: hidden . Since
+   drylab.4 the integrator shows a one-line notice outside the frame
+   instead (NOTICE, "Where the legal notices are shown"); File > Info
+   still opens and the ONLYOFFICE logo stays visible in the menu row. */
 :root body.theme-white #left-btn-about {
   display: none !important;
 }

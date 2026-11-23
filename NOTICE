@@ -77,23 +77,28 @@ What was modified (web-apps only; server, sdkjs and binaries are unchanged)
      of the integrator. See "Where the legal notices are
      shown" below.
 
-Where the legal notices are shown (since 10.0.0.1-drylab.3)
+Where the legal notices are shown (since 10.0.0.1-drylab.4)
 ------------------------------------------------------------
 
-With the About entry hidden, the Appropriate Legal Notices of this build
-are shown by the integrator (Drylab), outside the editor frame, in the
-"About this editor" (i) button of the bar directly above the editor. That
-button is visible at every screen size. Its dialog states: based on
-ONLYOFFICE Docs Community Edition 10.0.0.1, (c) Ascensio System SIA
-2009-2026; modified by Drylab on 2026-11-24 (visual theme); free software
-under the GNU Affero General Public License v3 with additional terms,
-WITHOUT ANY WARRANTY; the source of the running version
-(https://github.com/Drylab-AI/drylab-onlyoffice) and upstream
-(https://github.com/ONLYOFFICE/DocumentServer); a link to the licence
-text with the additional terms (LICENSE in this repository); and that
-ONLYOFFICE is a trademark of Ascensio System SIA. It is translated into
-English, Vietnamese, Japanese and Chinese; legal names, URLs and the
-version are never translated.
+With the About entry hidden, the integrator (Drylab) shows one line
+outside the editor frame, on every office file it opens for editing:
+"Based on the open-source ONLYOFFICE Docs (AGPL v3)". From 1024 px wide
+it sits at the right end of the bar directly above the editor; below
+that it is a thin line directly under the editor. Its tooltip reads
+"ONLYOFFICE is a trademark of Ascensio System SIA." It is translated
+into English, Vietnamese, Japanese and Chinese; "ONLYOFFICE Docs" and
+"AGPL v3" are never translated. (Until drylab.3 the integrator showed a
+longer notice in an "About this editor" (i) dialog; that dialog was
+removed by the integrator.)
+
+This NOTICE carries the complete notices: ONLYOFFICE Docs Community
+Edition 10.0.0.1, (c) Ascensio System SIA 2009-2026; modified by Drylab
+on the dates above; free software under the GNU Affero General Public
+License v3 with additional terms, WITHOUT ANY WARRANTY; the source of
+the running version (https://github.com/Drylab-AI/drylab-onlyoffice) and
+upstream (https://github.com/ONLYOFFICE/DocumentServer); the licence text
+with the additional terms (LICENSE in this repository); and ONLYOFFICE is
+a trademark of Ascensio System SIA.
 
 Inside the editor, the ONLYOFFICE logo stays visible in the menu row and
 File > Info still opens. The About panel itself (with Ascensio System
