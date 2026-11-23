@@ -13,7 +13,8 @@ refer to it only as "based on ONLYOFFICE Docs".
 
 Modified by: Drylab (GitHub organisation Drylab-AI)
 Date(s) of modification: 2026-11-23 (theme, image tag 10.0.0.1-drylab.1);
-2026-11-23 (layout v2, image tag 10.0.0.1-drylab.2)
+2026-11-23 (layout v2, image tag 10.0.0.1-drylab.2); 2026-11-24 (polish,
+image tag 10.0.0.1-drylab.3)
 
 What was modified (web-apps only; server, sdkjs and binaries are unchanged)
 ---------------------------------------------------------------------------
@@ -56,8 +57,52 @@ What was modified (web-apps only; server, sdkjs and binaries are unchanged)
    The About panel and its side-strip button are unchanged (in 10.0.0.1
    that button is the only way into the About panel).
 
+5. Polish (2026-11-24, image tag 10.0.0.1-drylab.3), same CSS file, still
+   CSS only:
+   - the toolbar row is fixed for tabs whose controls carry captions: the
+     View tab's "Zoom" caption sits beside its field instead of wrapping
+     below the pill, Layout's indent/spacing spinners and the
+     presentation galleries (shapes, transitions, animations) fit the
+     40 px pill, and two-line captions (Add Animation, Preview) become
+     icon buttons with their tooltip. ONLYOFFICE's own overflow ("more")
+     menu still collects what does not fit;
+   - menu row items are 13 px (were 14 px);
+   - hidden collaboration chrome the integrator does not use: the
+     Collaboration tab (comments, track changes, compare and chat are off
+     in the integrator's config), the users counter ("who is editing"),
+     the Editing/Viewing mode switch and the header close button.
+     Co-editing itself is unchanged. The Protection tab is removed by the
+     integrator's config (document.permissions.protect: false), not by CSS;
+   - ONLYOFFICE's About entry in the left strip is HIDDEN, at the request
+     of the integrator. See "Where the legal notices are
+     shown" below.
+
+Where the legal notices are shown (since 10.0.0.1-drylab.3)
+------------------------------------------------------------
+
+With the About entry hidden, the Appropriate Legal Notices of this build
+are shown by the integrator (Drylab), outside the editor frame, in the
+"About this editor" (i) button of the bar directly above the editor. That
+button is visible at every screen size. Its dialog states: based on
+ONLYOFFICE Docs Community Edition 10.0.0.1, (c) Ascensio System SIA
+2009-2026; modified by Drylab on 2026-11-24 (visual theme); free software
+under the GNU Affero General Public License v3 with additional terms,
+WITHOUT ANY WARRANTY; the source of the running version
+(https://github.com/Drylab-AI/drylab-onlyoffice) and upstream
+(https://github.com/ONLYOFFICE/DocumentServer); a link to the licence
+text with the additional terms (LICENSE in this repository); and that
+ONLYOFFICE is a trademark of Ascensio System SIA. It is translated into
+English, Vietnamese, Japanese and Chinese; legal names, URLs and the
+version are never translated.
+
+Inside the editor, the ONLYOFFICE logo stays visible in the menu row and
+File > Info still opens. The About panel itself (with Ascensio System
+SIA's details and this build's modified-version line) is not removed from
+the program; only its side-strip entry is hidden.
+
 Nothing else was changed. ONLYOFFICE's copyright notices, licence notices,
-the About panel (with Ascensio System SIA's details) and the logo are kept.
+source file headers and the logo are kept; the legal notices of the About
+panel are shown by the integrator as described above.
 
 Licence
 -------

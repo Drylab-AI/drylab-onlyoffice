@@ -2,7 +2,8 @@
  * Drylab theme for ONLYOFFICE Docs Community 10.0.0.1 (web-apps).
  *
  * MODIFIED FILE NOTICE: this file was added by Drylab (Drylab-AI) on
- * 2026-11-23 and changed again on 2026-11-23. It
+ * 2026-11-23 and changed again on 2026-11-23 and
+ * 2026-11-24 (polish, image tag 10.0.0.1-drylab.3). It
  * restyles the editor chrome of ONLYOFFICE Docs, the original
  * software developed by Ascensio System SIA, and is part of a modified
  * version of that program licensed under the GNU AGPL v3 with the ONLYOFFICE
@@ -11,8 +12,11 @@
  *
  * Rules kept here (licence gates, see NOTICE):
  * - The ONLYOFFICE logo stays visible: smaller and muted, never hidden or
- *   covered. The About panel and its copyright stay; we only add a line
- *   saying this build is modified.
+ *   covered.
+ * - Since drylab.3 the left-strip About entry is hidden (user request); the
+ *   complete legal notices are shown by the integrator instead (the Drylab
+ *   bar's (i) dialog) and in NOTICE. The About panel itself is unchanged
+ *   and still carries our modified-version line below.
  * - Layout and spacing feel only; Drylab colours, no third-party marks.
  *
  * How it works: CSS only, loaded by a <link> in each editor's index.html
@@ -172,6 +176,40 @@
 :root body.theme-white #box-right-btn-group #slot-btn-share {
   display: none !important;
 }
+/* Polish: collaboration chrome Drylab does not use, hidden here
+   because 10.0.0.1 Community has no config key for it (canSwitchMode =
+   isEdit; the users box and the close button have no Community switch;
+   customization.layout is a paid key):
+   - the users counter / "who is editing" list (co-editing itself keeps
+     working, only the counter is gone);
+   - the Editing/Viewing mode switch (review is off, and the Drylab
+     read-only view is the viewing mode);
+   - the header close X (the Drylab bar has Save and the back arrow;
+     File > Close File stays).
+   Protection is off by config (permissions.protect: false). */
+:root body.theme-white #box-right-btn-group .hedset[data-layout-name="header-users"],
+:root body.theme-white #box-right-btn-group #tlb-box-users,
+:root body.theme-white #box-right-btn-group .hedset[data-layout-name="header-editMode"],
+:root body.theme-white #box-right-btn-group #slot-btn-edit-mode,
+:root body.theme-white #box-right-btn-group #slot-btn-close {
+  display: none !important;
+}
+/* Collaboration tab: comments, track changes, compare and chat are all off
+   or unused (permissions.comment/review/chat: false), so the tab is empty
+   for Drylab users. ONLYOFFICE only hides it through
+   customization.layout.toolbar.collaboration, which Community ignores. */
+:root body.theme-white #toolbar .tabs li[data-layout-name="toolbar-collaboration"],
+:root body.theme-white #toolbar .tabs li:has(> a[data-tab="review"]) {
+  display: none !important;
+}
+/* Left strip About: hidden . The legal
+   notices it carried are shown instead in the Drylab bar's (i) dialog
+   (full ONLYOFFICE attribution, AGPL v3 + additional terms, warranty
+   disclaimer, source links) and in NOTICE; File > Info still opens and the
+   ONLYOFFICE logo stays visible in the menu row. */
+:root body.theme-white #left-btn-about {
+  display: none !important;
+}
 :root body.theme-white #box-doc-name { flex: 1 1 auto; }
 
 /* ---- 3. Menus as plain text items ------------------------------------ */
@@ -200,8 +238,10 @@
   margin: 0;
   padding: 3px 8px;
   border-radius: 4px;
-  font-size: 14px;
+  /* 13 px ( : smaller header type, with the Drylab title at 15 px). */
+  font-size: 13px;
   line-height: 20px;
+  white-space: nowrap;
   font-weight: 400;
   color: #28282A;
   transition: background-color 120ms ease, color 120ms ease;
@@ -243,11 +283,78 @@
   vertical-align: middle;
   height: 32px;
 }
+/* !important: some ONLYOFFICE templates put `style="display: flex"` on an
+   elset (View > Zoom, Layout > Indents/Spacing); that inline block flex
+   stacked them again and pushed the "Zoom" caption below the pill. */
 :root body.theme-white .toolbar .box-controls .elset {
-  display: inline-flex;
-  align-items: center;
+  display: inline-flex !important;
+  align-items: center !important;
   vertical-align: middle;
   height: 28px;
+}
+/* View > Zoom: the caption sits before the field, like "Zoom 100% ▾"
+   (it is a label, so it reads first); no top margin from the stacked
+   layout. The group becomes a one-line flex row (ONLYOFFICE's overflow
+   measures a group's outerWidth, which a flex row reports as usual); a
+   float was tried first and wrapped in pptx at 1704 px. */
+:root body.theme-white .toolbar .box-controls .group:has(.slot-lbl-zoom),
+:root body.theme-white .toolbar .box-controls .group:has(#slot-lbl-zoom) {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  vertical-align: middle;
+  gap: 6px;
+}
+:root body.theme-white .toolbar .box-controls .elset:has(.slot-lbl-zoom),
+:root body.theme-white .toolbar .box-controls .elset:has(#slot-lbl-zoom) {
+  order: -1;
+  margin-left: 0;
+}
+:root body.theme-white .toolbar .box-controls .slot-lbl-zoom,
+:root body.theme-white .toolbar .box-controls #slot-lbl-zoom {
+  margin-top: 0 !important;
+  font-size: 12px;
+  line-height: 28px;
+  color: #5C5C61;
+}
+/* Captioned inline items (checkboxes, spinner labels, small buttons) keep
+   their text on one line; the group itself may still move into the
+   overflow menu as a whole, which is ONLYOFFICE's own behaviour. */
+:root body.theme-white .toolbar .box-controls .elset .btn-slot.text,
+:root body.theme-white .toolbar .box-controls .elset label,
+:root body.theme-white .toolbar .box-controls .elset .caption {
+  white-space: nowrap;
+}
+/* Galleries (pptx shapes, transitions, animations; xlsx/docx have none in
+   the pill besides the styles field below): one 30 px strip of icon tiles
+   with the full list behind their own dropdown arrow. Stock they are
+   46-52 px, two rows tall, which pushed them out of the 40 px pill. */
+:root body.theme-white .toolbar .box-controls .combo-dataview:not(#slot-field-styles *) {
+  height: 30px !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  margin: auto 0 !important;
+  border-radius: 6px;
+  overflow: hidden;
+}
+:root body.theme-white .toolbar .box-controls .combo-dataview:not(#slot-field-styles *) .view,
+:root body.theme-white .toolbar .box-controls .combo-dataview:not(#slot-field-styles *) .button,
+:root body.theme-white .toolbar .box-controls .combo-dataview:not(#slot-field-styles *) .button .btn {
+  height: 30px !important;
+}
+:root body.theme-white .toolbar .box-controls .combo-dataview:not(#slot-field-styles *) .view .dataview {
+  height: 30px;
+  overflow: hidden;
+  padding-top: 0;
+}
+:root body.theme-white .toolbar .box-controls .combo-dataview:not(#slot-field-styles *) .btn_item {
+  height: 28px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+:root body.theme-white .toolbar .box-controls .combo-dataview:not(#slot-field-styles *) .btn_item .caption {
+  display: none;
 }
 :root body.theme-white .toolbar .box-controls .elset > * { flex-shrink: 0; }
 /* Font name keeps ONLYOFFICE's own width (its combobox is a table that
@@ -278,7 +385,11 @@
   line-height: 30px;
 }
 :root body.theme-white .toolbar .box-panels .btn-slot.x-huge .inner-box-caption .caption,
-:root body.theme-white .toolbar .more-container .btn-slot.x-huge .inner-box-caption .caption {
+:root body.theme-white .toolbar .more-container .btn-slot.x-huge .inner-box-caption .caption,
+/* Same for tall buttons whose slot is not marked x-huge (pptx Animation >
+   Add Animation / Preview): their two-line captions wrapped. */
+:root body.theme-white .toolbar .box-panels .btn-slot .btn.x-huge.icon-top .caption,
+:root body.theme-white .toolbar .box-panels .btn-slot .btn-group.x-huge.icon-top .inner-box-caption .caption {
   display: none;
 }
 :root body.theme-white .toolbar .box-panels .btn-slot.x-huge .inner-box-caption,
@@ -352,11 +463,9 @@
   background-color: #FFFFFF;
   border-color: #ECECEC;
 }
-/* The About button STAYS in the side strip: in 10.0.0.1 it is the only way
-   into ONLYOFFICE's About panel (there is no File > About), and that panel
-   carries the legal notices (licence gate). Comments and chat are off by
-   config (permissions.comment / chat = false), not by CSS, so the strip
-   holds Search, Navigation (or Thumbnails / Spellcheck) and About. */
+/* Comments and chat are off by config (permissions.comment / chat =
+   false), not by CSS; About is hidden in section 2 (drylab.3), so the strip
+   holds Search and Navigation (or Thumbnails / Spellcheck). */
 :root body.theme-white .statusbar { box-shadow: inset 0 1px 0 #ECECEC; }
 :root body.theme-white .statusbar .status-label,
 :root body.theme-white .statusbar #label-zoom {
@@ -368,7 +477,7 @@
 /* ONLYOFFICE's own text, logo and copyright above stay untouched. */
 #about-menu-panel #id-about-licensor-info:after,
 #about-menu-panel #id-about-licensor-short:after {
-  content: "This is a modified version of ONLYOFFICE Docs, changed by Drylab on 2026-11-23 (interface styling and layout only; build 10.0.0.1-drylab.2). Based on ONLYOFFICE Docs by Ascensio System SIA. Licensed under the GNU AGPL v3 with additional terms. Modified source: github.com/Drylab-AI/drylab-onlyoffice";
+  content: "This is a modified version of ONLYOFFICE Docs, changed by Drylab on 2026-11-23 and 2026-11-24 (interface styling and layout only; build 10.0.0.1-drylab.3). Based on ONLYOFFICE Docs by Ascensio System SIA. Licensed under the GNU AGPL v3 with additional terms. Modified source: github.com/Drylab-AI/drylab-onlyoffice";
   display: block;
   max-width: 420px;
   margin: 16px auto 0;

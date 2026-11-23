@@ -4,7 +4,9 @@
 # Static checks (curl, no browser): the server is healthy, each editor's
 # index.html (plain and gzip) links drylab.css with the "Modified by Drylab"
 # comment, drylab.css is served, ONLYOFFICE's LICENSE.txt is untouched, and
-# the theme keeps the logo visible and carries the About notice.
+# the theme keeps the logo visible and carries the modified notice, and
+# NOTICE says where the legal notices are shown (the in-editor About entry
+# is hidden since drylab.3).
 #
 # With --browser it also runs the harness + headless agent-browser and
 # saves before/after screenshots and DOM facts to $OUT (see README).
@@ -15,7 +17,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 PORT="${PORT:-8085}"
 NAME="${NAME:-drylab-onlyoffice-verify}"
-IMAGE="${IMAGE:-drylab-onlyoffice:10.0.0.1-drylab.2}"
+IMAGE="${IMAGE:-drylab-onlyoffice:10.0.0.1-drylab.3}"
 OUT="${OUT:-$PWD/scripts/out/evidence}"
 BROWSER=0; KEEP=0
 for a in "$@"; do case "$a" in --browser) BROWSER=1 ;; --keep) KEEP=1 ;; esac; done
@@ -48,7 +50,7 @@ for e in documenteditor spreadsheeteditor presentationeditor; do
   ok "$e links the theme (plain + gzip) with the modified notice"
 done
 css=$(curl -sfL "$base/common/main/resources/drylab/drylab.css") || fail "drylab.css not served"
-grep -q 'modified version of ONLYOFFICE Docs' <<<"$css" || fail "About notice missing from drylab.css"
+grep -q 'modified version of ONLYOFFICE Docs' <<<"$css" || fail "modified notice missing from drylab.css"
 grep -q 'Ascensio System SIA' <<<"$css" || fail "attribution missing from drylab.css"
 # Licence gate: no rule aimed at the logo may hide it (whole-file parse,
 # rules span lines).
@@ -64,16 +66,15 @@ for sel, body in re.findall(r"([^{}]+)\{([^{}]*)\}", css):
     if re.search(r"display:none|visibility:hidden|width:0[;p]|height:0[;p]", b) or (m and float(m.group(1)) < 0.4):
         sys.exit(f"hides logo: {sel.strip()}")
 PY
-# Layout v2: the side-strip About button is the only way into ONLYOFFICE's
-# About panel in 10.0.0.1, so no rule may hide it.
-python3 - /tmp/drylab-verify.css <<'PY' || fail "drylab.css hides the About button"
-import re, sys
-css = re.sub(r"/\*.*?\*/", "", open(sys.argv[1]).read(), flags=re.S)
-for sel, body in re.findall(r"([^{}]+)\{([^{}]*)\}", css):
-    if "left-btn-about" in sel and re.search(r"display:\s*none|visibility:\s*hidden", body):
-        sys.exit(f"hides About: {sel.strip()}")
-PY
-ok "drylab.css served, About notice present, logo and About button not hidden"
+# drylab.3: the left-strip About entry is hidden on purpose; the legal
+# notices move to the integrator's (i) dialog. NOTICE must say so, and must
+# carry the full notice text that dialog shows.
+for needle in "Where the legal notices are shown" "WITHOUT ANY WARRANTY" "(c) Ascensio System SIA" \
+  "https://github.com/Drylab-AI/drylab-onlyoffice" "https://github.com/ONLYOFFICE/DocumentServer" \
+  "ONLYOFFICE is a trademark of Ascensio System SIA"; do
+  grep -qF "$needle" NOTICE || fail "NOTICE lacks: $needle"
+done
+ok "drylab.css served, modified notice present, logo not hidden; NOTICE says where the legal notices are"
 docker exec -i "$NAME" cmp -s /var/www/onlyoffice/documentserver/LICENSE.txt /dev/stdin < LICENSE || fail "LICENSE differs from the image's LICENSE.txt"
 ok "LICENSE matches the upstream LICENSE.txt"
 docker exec "$NAME" test -f /var/www/onlyoffice/documentserver/DRYLAB-NOTICE.txt || fail "NOTICE not in the image"
@@ -101,6 +102,26 @@ assert isinstance(j["logo"], dict) and float(j["logo"]["opacity"]) > 0.3, "logo 
 assert j["logoCovered"] == "visible", "logo covered: " + j["logoCovered"]
 print("ok:", sys.argv[1].rsplit("/", 1)[-1], "theme applied, logo visible")
 PY
+    # File > Info still opens (ONLYOFFICE's document info panel), and the
+    # items this build hides stay hidden.
+    agent-browser eval "(() => { const d = document.querySelector('iframe').contentDocument; d.querySelector('#toolbar .tabs a[data-tab=file]').click(); return 1 })()" >/dev/null
+    sleep 1.5
+    agent-browser eval "(() => { const d = document.querySelector('iframe').contentDocument; const b = d.querySelector('#fm-btn-info'); b && b.click(); return 1 })()" >/dev/null
+    sleep 1.5
+    agent-browser eval "(() => {
+      const d = document.querySelector('iframe').contentDocument;
+      const shown = (s) => { const e = d.querySelector(s); if (!e) return false; const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(e).visibility !== 'hidden'; };
+      const tabs = [...d.querySelectorAll('#toolbar .tabs li.ribtab a')].filter((a) => a.offsetParent).map((a) => a.dataset.tab);
+      return JSON.stringify({ info: shown('#panel-info') && d.querySelector('#panel-info').innerText.trim().length > 0,
+        about: shown('#left-btn-about'), users: shown('#tlb-box-users'), mode: shown('#slot-btn-edit-mode'), close: shown('#slot-btn-close'),
+        review: tabs.includes('review'), protect: tabs.includes('protect') });
+    })()" | python3 -c '
+import json, sys
+j = json.loads(json.loads(sys.stdin.read()))
+assert j["info"], "File > Info did not open"
+for k in ("about", "users", "mode", "close", "review", "protect"):
+    assert not j[k], k + " is shown"
+print("ok: File > Info opens; About entry, users, mode switch, close, Collaboration and Protection hidden")'
   done
 fi
 echo "all checks passed"

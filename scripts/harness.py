@@ -61,8 +61,11 @@ CUSTOMIZATION = {
     "chat": False,
     "close": {"visible": True},
 }
-# Same as the backend's document.permissions for an editor (v2).
-PERMISSIONS = {"edit": True, "comment": False, "chat": False, "download": True, "print": True, "review": False}
+# Same as the backend's document.permissions for an editor. :
+# ``protect: False`` drops the Protection tab (``cfg=v2`` = without
+# it, for before shots against drylab.2).
+PERMISSIONS = {"edit": True, "comment": False, "chat": False, "download": True, "print": True, "review": False, "protect": False}
+PERMISSIONS_V2 = {k: v for k, v in PERMISSIONS.items() if k != "protect"}
 # ``cfg=v1``: the config (rulers hidden, comments + chat on), for
 # before shots against the drylab.1 image.
 CUSTOMIZATION_V1 = {k: v for k, v in CUSTOMIZATION.items() if k not in ("comments", "chat")}
@@ -98,7 +101,7 @@ def file_url(name: str) -> str:
     return f"{HOST_FOR_DS}/files/{urllib.parse.quote(name)}"
 
 
-def editor_config(name: str, suffix: str, lang: str, extra: dict | None = None, version: str = "v2") -> dict:
+def editor_config(name: str, suffix: str, lang: str, extra: dict | None = None, version: str = "v3") -> dict:
     ext = name.rsplit(".", 1)[-1]
     v1 = version == "v1"
     cust = json.loads(json.dumps(CUSTOMIZATION_V1 if v1 else CUSTOMIZATION))
@@ -112,7 +115,7 @@ def editor_config(name: str, suffix: str, lang: str, extra: dict | None = None, 
             "key": doc_key(name, suffix),
             "title": name,
             "url": file_url(name),
-            "permissions": dict(PERMISSIONS_V1 if v1 else PERMISSIONS),
+            "permissions": dict(PERMISSIONS_V1 if v1 else PERMISSIONS_V2 if version == "v2" else PERMISSIONS),
         },
         "editorConfig": {
             "mode": "edit",
@@ -178,7 +181,8 @@ window.docEditor = new DocsAPI.DocEditor('ed', cfg);
 # bottom border, save state in words). ``bar=v2`` (default): layout v2, no
 # border, save state as a cloud icon, the same title x the theme's
 # --drylab-menu-indent assumes (93 px from 640 px up, 57 px below).
-# ``bar=none`` drops it. Static HTML: it only has to look like the real bar.
+# ``bar=v3`` (default ): 15 px title and Save instead of Done, same
+# title x. ``bar=none`` drops it. Static HTML: it only has to look like the real bar.
 ICONS = {
     "back": '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
     "download": '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
@@ -205,6 +209,9 @@ BAR_CSS = """
 #bar .sp{flex:1}
 #bar .share{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 16px;border-radius:999px;background:#009D51;color:#fff;font-size:14px;font-weight:500}
 #bar .done{display:inline-flex;align-items:center;height:36px;padding:0 16px;border-radius:999px;border:1px solid #DEDEDE;font-size:14px;font-weight:500;min-width:40px;justify-content:center}
+#bar.v3 .title{font-size:15px;line-height:24px}
+#bar.v3 .done{height:32px;font-size:13px;padding:0 14px}
+#bar.v3 .share{height:32px;font-size:13px;padding:0 14px}
 @media (max-width:639px){#bar{gap:4px;padding:0 4px;height:56px}#bar .ib{width:44px;height:44px}#bar .fi,#bar .lbl,#bar .dl,#bar .st .lbl{display:none}#bar .share{height:44px;padding:0 12px}#bar .done{height:44px;padding:0 12px}}
 """
 
@@ -214,9 +221,11 @@ def bar_html(name: str, version: str) -> str:
     status = (f'<span class="st">{svg("cloud", 16)}<span class="lbl">All changes saved</span></span>' if version == "v1"
               else f'<span class="st" title="All changes saved">{svg("cloud", 18)}</span>')
     about = f'<span class="ib{" sm" if version != "v1" else ""}" title="About this editor">{svg("info", 18 if version != "v1" else 20)}</span>'
+    # v3: 15 px title, Save instead of Done.
+    done = "Save" if version == "v3" else "Done"
     right = (f'<span class="ib dl">{svg("download")}</span><span class="share">{svg("users", 16)}<span class="lbl">Share</span></span>{about}<span class="done">Done</span>'
              if version == "v1" else
-             f'<span class="ib dl" title="Download">{svg("download")}</span>{about}<span class="share">{svg("users", 16)}<span class="lbl">Share</span></span><span class="done">Done</span>')
+             f'<span class="ib dl" title="Download">{svg("download")}</span>{about}<span class="share">{svg("users", 16)}<span class="lbl">Share</span></span><span class="done">{done}</span>')
     return (f'<header id="bar" class="{version}" data-drylab-bar="{version}"><span class="ib">{svg("back")}</span>'
             f'<span class="fi" style="background:{color}"></span><span class="title" id="bar-title">{name}</span>{status}'
             f'<span class="sp"></span>{right}</header>')
@@ -262,11 +271,11 @@ class H(BaseHTTPRequestHandler):
             return self._send(200, p.read_bytes(), "application/octet-stream")
         if u.path == "/editor":
             name, s = q["name"], q.get("s", "")
-            cfg = editor_config(name, s, q.get("lang", "en"), json.loads(q.get("cust", "{}")), q.get("cfg", "v2"))
+            cfg = editor_config(name, s, q.get("lang", "en"), json.loads(q.get("cust", "{}")), q.get("cfg", "v3"))
             events = "" if q.get("events") == "none" else (DRYLAB_EVENTS if q.get("cfg") == "v1" else DRYLAB_EVENTS_V2).format(
                 qname=urllib.parse.quote(name), qs=urllib.parse.quote(s)
             )
-            bar_v = q.get("bar", "v2")
+            bar_v = q.get("bar", "v3")
             bar = "" if bar_v == "none" else bar_html(name, bar_v)
             page = PAGE.format(name=name, ds=DS_BROWSER, cfg=json.dumps(cfg), events=events, bar=bar, barcss=BAR_CSS if bar else "")
             return self._send(200, page, "text/html; charset=utf-8")
