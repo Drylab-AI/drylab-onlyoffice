@@ -84,9 +84,10 @@ def file_url(name: str) -> str:
     return f"{HOST_FOR_DS}/files/{urllib.parse.quote(name)}"
 
 
-def editor_config(name: str, suffix: str, lang: str) -> dict:
+def editor_config(name: str, suffix: str, lang: str, extra: dict | None = None) -> dict:
     ext = name.rsplit(".", 1)[-1]
     cust = json.loads(json.dumps(CUSTOMIZATION))
+    cust.update(extra or {})
     if DOC_TYPES[ext] == "word":
         cust["zoom"] = -2
     cfg = {
@@ -193,7 +194,7 @@ class H(BaseHTTPRequestHandler):
             return self._send(200, p.read_bytes(), "application/octet-stream")
         if u.path == "/editor":
             name, s = q["name"], q.get("s", "")
-            cfg = editor_config(name, s, q.get("lang", "en"))
+            cfg = editor_config(name, s, q.get("lang", "en"), json.loads(q.get("cust", "{}")))
             events = "" if q.get("events") == "none" else DRYLAB_EVENTS.format(
                 qname=urllib.parse.quote(name), qs=urllib.parse.quote(s)
             )
@@ -207,6 +208,16 @@ class H(BaseHTTPRequestHandler):
             return self._send(200, history_data(q["name"], q.get("s", ""), int(q.get("v", "2"))))
         if u.path == "/forcesave":
             cmd = {"c": "forcesave", "key": doc_key(q["name"], q.get("s", ""))}
+            body = dict(cmd, token=jwt_encode(cmd))
+            req = urllib.request.Request(
+                f"{DS_INTERNAL}/command", data=json.dumps(body).encode(),
+                headers={"Content-Type": "application/json", "AuthorizationJwt": "Bearer " + jwt_encode(cmd)},
+            )
+            with urllib.request.urlopen(req, timeout=30) as r:
+                return self._send(200, json.loads(r.read()))
+        if u.path == "/meta":
+            # Rename refresh: CommandService {c: meta} sets the open editor's title.
+            cmd = {"c": "meta", "key": doc_key(q["name"], q.get("s", "")), "meta": {"title": q["title"]}}
             body = dict(cmd, token=jwt_encode(cmd))
             req = urllib.request.Request(
                 f"{DS_INTERNAL}/command", data=json.dumps(body).encode(),
