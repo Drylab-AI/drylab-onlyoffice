@@ -15,7 +15,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 PORT="${PORT:-8085}"
 NAME="${NAME:-drylab-onlyoffice-verify}"
-IMAGE="${IMAGE:-drylab-onlyoffice:local}"
+IMAGE="${IMAGE:-drylab-onlyoffice:10.0.0.1-drylab.2}"
 OUT="${OUT:-$PWD/scripts/out/evidence}"
 BROWSER=0; KEEP=0
 for a in "$@"; do case "$a" in --browser) BROWSER=1 ;; --keep) KEEP=1 ;; esac; done
@@ -64,7 +64,16 @@ for sel, body in re.findall(r"([^{}]+)\{([^{}]*)\}", css):
     if re.search(r"display:none|visibility:hidden|width:0[;p]|height:0[;p]", b) or (m and float(m.group(1)) < 0.4):
         sys.exit(f"hides logo: {sel.strip()}")
 PY
-ok "drylab.css served, About notice present, logo not hidden"
+# Layout v2: the side-strip About button is the only way into ONLYOFFICE's
+# About panel in 10.0.0.1, so no rule may hide it.
+python3 - /tmp/drylab-verify.css <<'PY' || fail "drylab.css hides the About button"
+import re, sys
+css = re.sub(r"/\*.*?\*/", "", open(sys.argv[1]).read(), flags=re.S)
+for sel, body in re.findall(r"([^{}]+)\{([^{}]*)\}", css):
+    if "left-btn-about" in sel and re.search(r"display:\s*none|visibility:\s*hidden", body):
+        sys.exit(f"hides About: {sel.strip()}")
+PY
+ok "drylab.css served, About notice present, logo and About button not hidden"
 docker exec -i "$NAME" cmp -s /var/www/onlyoffice/documentserver/LICENSE.txt /dev/stdin < LICENSE || fail "LICENSE differs from the image's LICENSE.txt"
 ok "LICENSE matches the upstream LICENSE.txt"
 docker exec "$NAME" test -f /var/www/onlyoffice/documentserver/DRYLAB-NOTICE.txt || fail "NOTICE not in the image"

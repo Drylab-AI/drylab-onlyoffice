@@ -12,7 +12,8 @@ official ONLYOFFICE product and is not endorsed by Ascensio System SIA. We
 refer to it only as "based on ONLYOFFICE Docs".
 
 Modified by: Drylab (GitHub organisation Drylab-AI)
-Date(s) of modification: 2026-11-23
+Date(s) of modification: 2026-11-23 (theme, image tag 10.0.0.1-drylab.1);
+2026-11-23 (layout v2, image tag 10.0.0.1-drylab.2)
 
 What was modified (web-apps only; server, sdkjs and binaries are unchanged)
 ---------------------------------------------------------------------------
@@ -34,6 +35,26 @@ What was modified (web-apps only; server, sdkjs and binaries are unchanged)
 
 3. Regenerated the precompressed (.gz) copies of the touched files when the
    image has them.
+
+4. Layout v2 (2026-11-23, image tag 10.0.0.1-drylab.2), same CSS file,
+   still CSS only:
+   - the menu row (tabs) is plain 14 px text starting at the x of the
+     integrator's document title above the editor, with the ONLYOFFICE
+     logo moved to the right end of that row (still visible, 70 px wide,
+     60 % opacity, full on hover);
+   - ONLYOFFICE's header user avatar, header search and header Share
+     button are hidden (the integrator's bar has Share; search stays in
+     the side strip and on Ctrl+F);
+   - the toolbar is one 40 px rounded pill (radius 24 px) on a single row:
+     ONLYOFFICE's two stacked button rows sit side by side, its tall
+     buttons are icon-only (the same state ONLYOFFICE uses when a toolbar
+     is narrow), and the paragraph style gallery shows only the current
+     style plus its dropdown with every style. ONLYOFFICE's own overflow
+     ("more") menu still takes whatever does not fit;
+   - slimmer status bar (26 px) and a slightly stronger page border on the
+     grey canvas.
+   The About panel and its side-strip button are unchanged (in 10.0.0.1
+   that button is the only way into the About panel).
 
 Nothing else was changed. ONLYOFFICE's copyright notices, licence notices,
 the About panel (with Ascensio System SIA's details) and the logo are kept.

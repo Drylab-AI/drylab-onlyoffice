@@ -1,6 +1,7 @@
 # Drylab build of ONLYOFFICE Docs Community: upstream image + a CSS theme.
 #
-# MODIFIED VERSION NOTICE: modified by Drylab (Drylab-AI) on 2026-11-23.
+# MODIFIED VERSION NOTICE: modified by Drylab (Drylab-AI) on 2026-11-23
+# (theme, drylab.1) and 2026-11-23 (layout v2, drylab.2).
 # Based on ONLYOFFICE Docs by Ascensio System SIA (onlyoffice/documentserver
 # 10.0.0.1), GNU AGPL v3 with additional terms. What changed: see NOTICE.
 #
@@ -16,7 +17,7 @@ ARG WEBAPPS=/var/www/onlyoffice/documentserver/web-apps/apps
 ARG DRYLAB_MODIFIED_DATE=2026-11-23
 
 LABEL org.opencontainers.image.title="drylab-onlyoffice" \
-      org.opencontainers.image.description="Modified ONLYOFFICE Docs Community 10.0.0.1 (CSS restyle by Drylab). Based on ONLYOFFICE Docs by Ascensio System SIA." \
+      org.opencontainers.image.description="Modified ONLYOFFICE Docs Community 10.0.0.1 (CSS restyle and layout v2 by Drylab, tag 10.0.0.1-drylab.2). Based on ONLYOFFICE Docs by Ascensio System SIA." \
       org.opencontainers.image.licenses="AGPL-3.0-only" \
       org.opencontainers.image.source="https://github.com/Drylab-AI/drylab-onlyoffice" \
       org.opencontainers.image.base.name="onlyoffice/documentserver:10.0.0.1"

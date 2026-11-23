@@ -1,6 +1,6 @@
 # drylab-onlyoffice
 
-Drylab's modified build of ONLYOFFICE Docs Community 10.0.0.1: the upstream image `onlyoffice/documentserver:10.0.0.1` plus one CSS theme. Based on ONLYOFFICE Docs by Ascensio System SIA. ONLYOFFICE is a trademark of Ascensio System SIA; this build is not an official ONLYOFFICE product.
+Drylab's modified build of ONLYOFFICE Docs Community 10.0.0.1 (current tag `10.0.0.1-drylab.2`, layout v2 of 2026-11-23): the upstream image `onlyoffice/documentserver:10.0.0.1` plus one CSS theme. Based on ONLYOFFICE Docs by Ascensio System SIA. ONLYOFFICE is a trademark of Ascensio System SIA; this build is not an official ONLYOFFICE product.
 
 Licence: GNU AGPL v3 with the ONLYOFFICE additional terms (`LICENSE`, `NOTICE`). Anyone who uses this build over a network is entitled to this source.
 
@@ -15,10 +15,18 @@ CSS only, in web-apps (details and dates in `NOTICE`):
 
 The theme applies only when the integrator selects `customization.uiTheme: "theme-white"`, as the Drylab backend does. The other themes stay stock.
 
+### Layout v2 (2026-11-23, `10.0.0.1-drylab.2`)
+
+- The menu row reads as the second line of the integrator's header: plain 14 px items whose first text starts at the integrator's title x (`--drylab-menu-indent`, 93 px; 57 px below 640 px), the ONLYOFFICE logo at the far right of that row (visible, muted).
+- No duplicate header items: ONLYOFFICE's avatar, header search and header Share are hidden.
+- One-row toolbar pill (40 px, radius 24 px, `#EEF3F1`): the two stacked button rows sit side by side, tall buttons are icon-only, and the style gallery shows only the current style plus its full dropdown. ONLYOFFICE's own "more" menu keeps whatever does not fit, so every function stays reachable.
+- 26 px status bar; page border `#D5DBE3` on the `#F0F4F9` canvas.
+- Not changed by CSS: comments, chat and version history are turned off by the integrator's config (`permissions.comment/chat: false`, no history events); rulers come from `customization.hideRulers: false`. The side-strip About button stays: in 10.0.0.1 it is the only entry to the About panel with the legal notices.
+
 ## Build and run (local only)
 
 ```bash
-docker build -t drylab-onlyoffice:local .
+docker build -t drylab-onlyoffice:10.0.0.1-drylab.2 .
 docker run -d --name drylab-oo -p 127.0.0.1:8085:80 --add-host host.docker.internal:host-gateway \
   -e JWT_ENABLED=true -e JWT_SECRET=<secret> -e JWT_HEADER=AuthorizationJwt -e JWT_IN_BODY=true \
   -e ALLOW_PRIVATE_IP_ADDRESS=true -e WOPI_ENABLED=false drylab-onlyoffice:local
@@ -48,9 +56,9 @@ Manual checks used for the first release (2026-11-23), all on 127.0.0.1:
 - type in each format, then forcesave: the callback file contains the edit;
 - `downloadAs('pdf')` returns a PDF;
 - Insert > Image > Image from storage, signed `insertImage`;
-- File > Rename and File > Version History (with the integrator events wired);
+- File > Rename (with the integrator event wired); File > Version History absent once the integrator drops the history events (layout v2);
 - About shows the Ascensio System SIA details plus the modified notice.
 
 ## Updating ONLYOFFICE
 
-Bump the `FROM` tag, and re-check the selectors in `drylab.css` against the new web-apps (`#toolbar .tabs`, `.box-controls`, `#header-logo`, `#about-menu-panel`). Update the date in `NOTICE`, `Dockerfile`, `drylab.css` and the About text, then run `scripts/verify.sh --browser`.
+Bump the `FROM` tag, and re-check the selectors in `drylab.css` against the new web-apps (`#toolbar .tabs`, `.box-controls`, `.elset`, `.x-huge`, `#slot-field-styles`, `.more-box`, `#box-right-btn-group`, `#header-logo`, `#about-menu-panel`). Update the date in `NOTICE`, `Dockerfile`, `drylab.css` and the About text, then run `scripts/verify.sh --browser`.

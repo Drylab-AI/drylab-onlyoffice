@@ -2,7 +2,8 @@
  * Drylab theme for ONLYOFFICE Docs Community 10.0.0.1 (web-apps).
  *
  * MODIFIED FILE NOTICE: this file was added by Drylab (Drylab-AI) on
- * 2026-11-23. It restyles the editor chrome of ONLYOFFICE Docs, the original
+ * 2026-11-23 and changed again on 2026-11-23. It
+ * restyles the editor chrome of ONLYOFFICE Docs, the original
  * software developed by Ascensio System SIA, and is part of a modified
  * version of that program licensed under the GNU AGPL v3 with the ONLYOFFICE
  * additional terms (see NOTICE and LICENSE in
@@ -91,18 +92,34 @@
 
   /* Canvas: soft blue-grey around the white page, borderless page. */
   --canvas-background: #F0F4F9;
-  --canvas-page-border: #E3E8EF;
+  /* The page is drawn by sdkjs (canvas), so its "shadow" is this soft
+     border; CSS box-shadow cannot reach it. */
+  --canvas-page-border: #D5DBE3;
   --canvas-ruler-background: #FFFFFF;
   --canvas-ruler-border: #E3E8EF;
 
   /* One toolbar pill: no card shadow, rounded. */
   --shadow-toolbar: none;
   --shadow-toolbar-style-off: none;
-  --border-radius-toolbar: 16px;
+  --border-radius-toolbar: 24px;
   --toolbar-tab-radius: 6px;
 
+  /* Layout v2: one toolbar row. Read once at start-up by the layout
+     (utils.js toolbar-height-controls): 48 = a 40 px pill + 4 px above and
+     below. Buttons that are two rows tall in stock ONLYOFFICE (x-huge)
+     become 32 px icon buttons, the state ONLYOFFICE itself uses when a
+     toolbar is too narrow (compactwidth). */
+  --toolbar-height-controls: 48px;
+  --toolbar-group-height: 32px;
+  --x-huge-btn-height: 32px;
+  /* x of the title text in the Drylab bar above the iframe (12 px padding
+     + 36 px back + 8 + 24 px file icon + 8 + 5 px title inset); the menu
+     row starts its first item's text there, so the two rows read as one
+     header. Phones: no file icon, 44 px back button. */
+  --drylab-menu-indent: 93px;
+
   /* Slim status bar (read once by the layout at start-up). */
-  --statusbar-height: 28px;
+  --statusbar-height: 26px;
 }
 
 /* The loading skeleton (inline <style> in index.html) matches the theme. */
@@ -112,36 +129,63 @@
   --sk-background-toolbar-header-word: #FFFFFF;
   --sk-background-toolbar-controls: #F1F4F8;
   --sk-shadow-toolbar: none;
-  --sk-border-radius-toolbar: 16px;
+  --sk-border-radius-toolbar: 24px;
 }
 
-/* ---- 2. Header row: one quiet white row (logo + menus + header buttons) */
+/* ---- 2. Header row: the menu line under the Drylab title -------------- */
+/* Layout v2: the Drylab bar above the iframe and this row read
+   as ONE white header, like a document editor's title + menu line. */
+@media (max-width: 639px) {
+  :root body.theme-white { --drylab-menu-indent: 57px; }
+}
 :root body.theme-white .toolbar .box-tabs,
 :root body.theme-white .toolbar .box-tabs .extra,
 :root body.theme-white .toolbar .tabs {
   background-color: #FFFFFF;
   box-shadow: none;
 }
-
-/* Logo: kept visible, just smaller and muted (licence gate: never hidden). */
+/* Order: menus first, then ONLYOFFICE's header buttons, then its logo at
+   the far right (visible, small, muted; licence gate: never hidden). */
+:root body.theme-white .toolbar .box-tabs .extra.left { order: 3; }
+:root body.theme-white .toolbar .box-tabs .tabs { order: 1; }
+:root body.theme-white .toolbar .box-tabs .extra.right { order: 2; flex: 1 1 auto; }
 :root body.theme-white .extra #header-logo {
-  padding: 6px 10px 6px 12px;
+  padding: 6px 14px 6px 10px;
   opacity: 0.6;
   transition: opacity 120ms ease;
 }
-:root body.theme-white .extra #header-logo:hover {
-  opacity: 1;
-}
+:root body.theme-white .extra #header-logo:hover { opacity: 1; }
 :root body.theme-white .extra #header-logo i {
   width: 70px;
   height: 16px;
   background-size: 70px 16px;
   background-position: left center;
 }
+/* Duplicates of the Drylab bar: ONLYOFFICE's user avatar (initials),
+   its header search (Search stays in the side strip and on Ctrl+F) and
+   its header Share (the Drylab bar has the Share pill; both open the same
+   Drylab dialog). The document title is already off (toolbarHideFileName). */
+:root body.theme-white #box-right-btn-group .btn-slot:has(.btn-current-user),
+:root body.theme-white #box-right-btn-group .btn-current-user,
+:root body.theme-white #box-right-btn-group .slot-btn-user-name,
+:root body.theme-white #box-right-btn-group #slot-btn-search,
+:root body.theme-white #box-right-btn-group #slot-btn-share {
+  display: none !important;
+}
+:root body.theme-white #box-doc-name { flex: 1 1 auto; }
 
-/* ---- 3. Tabs as plain text menu items -------------------------------- */
+/* ---- 3. Menus as plain text items ------------------------------------ */
+/* The first item's text starts at --drylab-menu-indent (8 px link
+   padding before it; the scroll arrows only show when the row is short). */
+:root body.theme-white .toolbar .tabs {
+  padding-left: calc(var(--drylab-menu-indent) - 8px);
+}
+/* Short row (phones): ONLYOFFICE shows a 20 px scroll arrow first. */
+:root body.theme-white .toolbar .tabs.short {
+  padding-left: calc(var(--drylab-menu-indent) - 28px);
+}
 :root body.theme-white .toolbar .tabs > ul {
-  padding: 0 2px;
+  padding: 0;
   display: flex;
   align-items: center;
 }
@@ -151,16 +195,14 @@
   background: transparent;
   box-shadow: none;
 }
-/* No underline bar under the active tab. */
-:root body.theme-white .toolbar .tabs li:after {
-  display: none;
-}
+:root body.theme-white .toolbar .tabs li:after { display: none; }
 :root body.theme-white .toolbar .tabs li > a {
-  margin: 0 1px;
-  padding: 3px 9px;
-  border-radius: 6px;
-  font-size: 13px;
-  line-height: 18px;
+  margin: 0;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
   color: #28282A;
   transition: background-color 120ms ease, color 120ms ease;
 }
@@ -169,56 +211,153 @@
   background: transparent;
   box-shadow: none;
 }
-:root body.theme-white .toolbar .tabs li:hover > a {
-  background-color: #F5F5F5;
-}
-/* The open menu reads like an open menu: green tint, green text. */
+:root body.theme-white .toolbar .tabs li:hover > a { background-color: #F1F3F4; }
+/* Subtle active state: the open menu is tinted, no box or underline. */
 :root body.theme-white .toolbar .tabs li.active > a,
 :root body.theme-white .toolbar .tabs li.active:hover > a {
   background-color: #EFF9F5;
   color: #00803F;
-  font-weight: 500;
 }
 
-/* ---- 4. Toolbar: one rounded pill on white --------------------------- */
-:root body.theme-white #toolbar .toolbar {
-  background-color: #FFFFFF;
-}
+/* ---- 4. Toolbar: ONE rounded pill, one row ---------------------------- */
+:root body.theme-white #toolbar .toolbar { background-color: #FFFFFF; }
 :root body.theme-white .toolbar .box-controls {
-  margin: 0 8px;
-  background-color: #F1F4F8;
-  border-radius: 16px;
+  height: 40px;
+  margin: 4px 12px;
+  padding: 4px 0;
+  box-sizing: border-box;
+  background-color: #EEF3F1;
+  border-radius: 24px;
+  align-items: center;
 }
 :root body.theme-white .toolbar .box-controls:not(.z-clear *):before {
   box-shadow: none;
+  display: none;
 }
-/* Group dividers: shorter and lighter, so groups read as soft clusters. */
-:root body.theme-white .toolbar .separator.long {
+:root body.theme-white .toolbar .box-controls .panel { height: 32px; }
+:root body.theme-white .toolbar .box-controls .panel.static { padding-left: 6px; }
+/* Two stacked button rows (elset) side by side instead. ONLYOFFICE's own
+   overflow logic measures outerWidth, so groups that don't fit still move
+   into its "more" (...) menu at the right of the pill. */
+:root body.theme-white .toolbar .box-controls .group {
+  vertical-align: middle;
   height: 32px;
-  margin-top: 10px;
-  border-color: #DDE2E8;
-  opacity: 0.9;
 }
-:root body.theme-white .toolbar .btn-toolbar.active,
-:root body.theme-white .toolbar .btn-toolbar:active:not(.disabled) {
-  color: #00803F;
+:root body.theme-white .toolbar .box-controls .elset {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  height: 28px;
 }
-/* Combo boxes (font, size) and the style gallery: white chips in the pill. */
-:root body.theme-white .toolbar .combobox .form-control,
-:root body.theme-white .toolbar .combo-dataview {
+:root body.theme-white .toolbar .box-controls .elset > * { flex-shrink: 0; }
+/* Font name keeps ONLYOFFICE's own width (its combobox is a table that
+   would otherwise collapse inside the flex row). */
+:root body.theme-white .toolbar .box-controls #slot-field-fontname,
+:root body.theme-white .toolbar .box-controls #slot-field-fontname .combobox { width: 104px; }
+/* The pill is the positioning box, so ONLYOFFICE's "more" (...) button
+   sits at the pill's right end, inside the rounded edge. */
+:root body.theme-white .toolbar .box-controls { position: relative; }
+:root body.theme-white .toolbar .box-controls .elset:not(:first-child) {
+  margin-top: 0;
+  margin-left: 4px;
+}
+:root body.theme-white .toolbar .group.small { padding-left: 4px; }
+:root body.theme-white .toolbar .group.small + .separator:not(.invisible) { margin-left: 4px; }
+:root body.theme-white .toolbar .separator.long {
+  height: 20px;
+  margin-top: 0;
+  vertical-align: middle;
+  border-color: #D3DAD6;
+}
+/* Tall (x-huge) buttons: icon only, 32 px, caret beside it. Same as
+   ONLYOFFICE's own compactwidth state; the tooltip and the dropdown stay. */
+:root body.theme-white .toolbar .box-controls .btn.x-huge,
+:root body.theme-white .toolbar .box-controls .btn-group.x-huge {
+  height: 32px;
+  min-width: 32px;
+  line-height: 30px;
+}
+:root body.theme-white .toolbar .box-panels .btn-slot.x-huge .inner-box-caption .caption,
+:root body.theme-white .toolbar .more-container .btn-slot.x-huge .inner-box-caption .caption {
+  display: none;
+}
+:root body.theme-white .toolbar .box-panels .btn-slot.x-huge .inner-box-caption,
+:root body.theme-white .toolbar .more-container .btn-slot.x-huge .inner-box-caption {
+  height: 32px;
+  padding: 0 2px;
+  justify-content: center;
+  align-items: center;
+}
+:root body.theme-white .toolbar .box-panels .btn-slot.x-huge .compact-caret,
+:root body.theme-white .toolbar .more-container .btn-slot.x-huge .compact-caret {
+  display: block;
+}
+:root body.theme-white .toolbar .box-controls .btn.icon-top.x-huge,
+:root body.theme-white .toolbar .box-controls .btn-group.icon-top.x-huge {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+}
+:root body.theme-white .toolbar .box-controls .btn-group.icon-top.x-huge > .btn {
+  height: 32px;
+}
+:root body.theme-white .toolbar .more-box {
+  background-color: #EEF3F1;
+  border-radius: 0 24px 24px 0;
+  height: 32px;
+  top: 4px !important;
+  right: 8px;
+  padding-left: 6px;
+}
+/* Paragraph styles: no big preview gallery, just the current style and
+   the dropdown that lists every style (like a "Normal text" menu). Width
+   is fixed so ONLYOFFICE's flex resize treats it as already minimal. */
+:root body.theme-white #slot-field-styles {
+  width: 168px !important;
+  min-width: 168px !important;
+  max-width: 168px !important;
+  height: 32px;
+}
+:root body.theme-white #slot-field-styles .combo-dataview {
+  height: 30px;
+  margin-top: 1px;
+  background: #FFFFFF;
   border-radius: 6px;
+  overflow: hidden;
 }
+:root body.theme-white #slot-field-styles .combo-dataview .view { height: 30px; overflow: hidden; }
+:root body.theme-white #slot-field-styles .combo-dataview .view .item:not(.selected) { display: none; }
+:root body.theme-white #slot-field-styles .combo-dataview .view .item {
+  height: 30px;
+  margin: 0;
+  border: 0;
+  box-shadow: none;
+}
+:root body.theme-white #slot-field-styles .combo-dataview .view .item .style {
+  height: 30px;
+  background-position: left center;
+}
+:root body.theme-white #slot-field-styles .combo-dataview .button,
+:root body.theme-white #slot-field-styles .combo-dataview .button .btn { height: 30px !important; }
+:root body.theme-white .toolbar .btn-toolbar.active,
+:root body.theme-white .toolbar .btn-toolbar:active:not(.disabled) { color: #00803F; }
+:root body.theme-white .toolbar .combobox .form-control,
+:root body.theme-white .toolbar .combo-dataview { border-radius: 6px; }
+:root body.theme-white .toolbar .combobox .form-control { background-color: #FFFFFF; }
 
-/* ---- 5. Side strips and status bar: quieter --------------------------- */
+/* ---- 5. Side strips, canvas and status bar ---------------------------- */
 :root body.theme-white .tool-menu.left .tool-menu-btns,
 :root body.theme-white #left-menu,
 :root body.theme-white #right-menu .tool-menu-btns {
   background-color: #FFFFFF;
   border-color: #ECECEC;
 }
-:root body.theme-white .statusbar {
-  box-shadow: inset 0 1px 0 #ECECEC;
-}
+/* The About button STAYS in the side strip: in 10.0.0.1 it is the only way
+   into ONLYOFFICE's About panel (there is no File > About), and that panel
+   carries the legal notices (licence gate). Comments and chat are off by
+   config (permissions.comment / chat = false), not by CSS, so the strip
+   holds Search, Navigation (or Thumbnails / Spellcheck) and About. */
+:root body.theme-white .statusbar { box-shadow: inset 0 1px 0 #ECECEC; }
 :root body.theme-white .statusbar .status-label,
 :root body.theme-white .statusbar #label-zoom {
   color: #717176;
@@ -229,7 +368,7 @@
 /* ONLYOFFICE's own text, logo and copyright above stay untouched. */
 #about-menu-panel #id-about-licensor-info:after,
 #about-menu-panel #id-about-licensor-short:after {
-  content: "This is a modified version of ONLYOFFICE Docs, changed by Drylab on 2026-11-23 (interface styling only). Based on ONLYOFFICE Docs by Ascensio System SIA. Licensed under the GNU AGPL v3 with additional terms. Modified source: github.com/Drylab-AI/drylab-onlyoffice";
+  content: "This is a modified version of ONLYOFFICE Docs, changed by Drylab on 2026-11-23 (interface styling and layout only; build 10.0.0.1-drylab.2). Based on ONLYOFFICE Docs by Ascensio System SIA. Licensed under the GNU AGPL v3 with additional terms. Modified source: github.com/Drylab-AI/drylab-onlyoffice";
   display: block;
   max-width: 420px;
   margin: 16px auto 0;

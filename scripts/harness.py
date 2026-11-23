@@ -8,8 +8,11 @@ modified DocServer can be checked on one machine:
   sends (keep CUSTOMIZATION in sync with the integrator's config);
 - signs the config, ``insertImage`` and ``setHistoryData`` payloads (HS256);
 - receives the save callback and keeps every saved file under ``out/``;
-- wires the Community events Drylab uses (rename, history, sharing, insert
-  image, close) and records each one in ``window.__events``.
+- wires the Community events Drylab uses (rename, sharing, insert image,
+  close; history only with ``cfg=v1``) and records each one in
+  ``window.__events``;
+- draws a mock of the Drylab editor bar above the iframe (``bar=v1|v2|none``)
+  so screenshots show the whole header block.
 
 Binds 127.0.0.1 (browser) and the docker0 bridge IP (DocServer callbacks)
 only, never 0.0.0.0.
@@ -41,6 +44,7 @@ LOG = OUT / "callbacks.jsonl"
 
 DOC_TYPES = {"docx": "word", "xlsx": "cell", "pptx": "slide"}
 # Same as the integrator's editor customization (+ zoom for word).
+# Layout v2: rulers on for Word, comments and chat off.
 CUSTOMIZATION = {
     "forcesave": True,
     "autosave": True,
@@ -51,9 +55,19 @@ CUSTOMIZATION = {
     "uiTheme": "theme-white",
     "features": {"tabStyle": "line", "tabBackground": "toolbar", "featuresTips": False},
     "hideRightMenu": True,
-    "hideRulers": True,
+    "hideRulers": False,
     "plugins": False,
+    "comments": False,
+    "chat": False,
+    "close": {"visible": True},
 }
+# Same as the backend's document.permissions for an editor (v2).
+PERMISSIONS = {"edit": True, "comment": False, "chat": False, "download": True, "print": True, "review": False}
+# ``cfg=v1``: the config (rulers hidden, comments + chat on), for
+# before shots against the drylab.1 image.
+CUSTOMIZATION_V1 = {k: v for k, v in CUSTOMIZATION.items() if k not in ("comments", "chat")}
+CUSTOMIZATION_V1["hideRulers"] = True
+PERMISSIONS_V1 = {"edit": True, "comment": True, "download": True, "print": True, "review": False}
 
 
 def b64url(b: bytes) -> str:
@@ -84,9 +98,10 @@ def file_url(name: str) -> str:
     return f"{HOST_FOR_DS}/files/{urllib.parse.quote(name)}"
 
 
-def editor_config(name: str, suffix: str, lang: str, extra: dict | None = None) -> dict:
+def editor_config(name: str, suffix: str, lang: str, extra: dict | None = None, version: str = "v2") -> dict:
     ext = name.rsplit(".", 1)[-1]
-    cust = json.loads(json.dumps(CUSTOMIZATION))
+    v1 = version == "v1"
+    cust = json.loads(json.dumps(CUSTOMIZATION_V1 if v1 else CUSTOMIZATION))
     cust.update(extra or {})
     if DOC_TYPES[ext] == "word":
         cust["zoom"] = -2
@@ -97,7 +112,7 @@ def editor_config(name: str, suffix: str, lang: str, extra: dict | None = None) 
             "key": doc_key(name, suffix),
             "title": name,
             "url": file_url(name),
-            "permissions": {"edit": True, "comment": True, "download": True, "print": True, "review": False},
+            "permissions": dict(PERMISSIONS_V1 if v1 else PERMISSIONS),
         },
         "editorConfig": {
             "mode": "edit",
@@ -137,10 +152,11 @@ def insert_image_payload() -> dict:
 
 
 PAGE = """<!doctype html><html><head><meta charset="utf-8"><title>harness {name}</title>
-<style>html,body{{margin:0;height:100%}}#ed{{height:100vh}}</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>html,body{{margin:0;height:100%}}body{{display:flex;flex-direction:column}}#ed-wrap{{flex:1;min-height:0}}#ed{{height:100%}}{barcss}</style>
 <script>window.__t0 = performance.now(); window.__events = [];</script>
 <script src="{ds}/web-apps/apps/api/documents/api.js"></script></head>
-<body><div id="ed"></div><script>
+<body>{bar}<div id="ed-wrap"><div id="ed"></div></div><script>
 const cfg = {cfg};
 const q = (p) => fetch(p).then(r => r.json());
 const ev = (s) => window.__events.push(s);
@@ -157,6 +173,55 @@ cfg.events = {{
 window.docEditor = new DocsAPI.DocEditor('ed', cfg);
 </script></body></html>"""
 
+# Mock of the Drylab editor bar above the iframe (the integrator's header), so
+# shots show the whole header block. ``bar=v1``: the bar (48 px,
+# bottom border, save state in words). ``bar=v2`` (default): layout v2, no
+# border, save state as a cloud icon, the same title x the theme's
+# --drylab-menu-indent assumes (93 px from 640 px up, 57 px below).
+# ``bar=none`` drops it. Static HTML: it only has to look like the real bar.
+ICONS = {
+    "back": '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+    "download": '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
+    "users": '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    "info": '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
+    "cloud": '<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/><path d="m9.5 14 2 2 3.5-3.5"/>',
+}
+FILE_COLORS = {"docx": "#2B6CE6", "xlsx": "#1E8E3E", "pptx": "#E8710A"}
+
+
+def svg(name: str, size: int = 20) -> str:
+    return (f'<svg width="{size}" height="{size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+            f'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{ICONS[name]}</svg>')
+
+
+BAR_CSS = """
+#bar{display:flex;align-items:center;gap:8px;padding:0 12px;height:48px;background:#fff;font-family:Inter,'Segoe UI',Arial,sans-serif;color:#28282A;flex-shrink:0}
+#bar.v1{border-bottom:1px solid #E0E0E0}
+#bar .ib{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;color:#434348;flex-shrink:0}
+#bar .ib.sm{width:32px;height:32px}
+#bar .fi{width:24px;height:24px;border-radius:4px;flex-shrink:0}
+#bar .title{font-size:18px;line-height:28px;padding:0 4px;border:1px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bar .st{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#717176;white-space:nowrap}
+#bar .sp{flex:1}
+#bar .share{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 16px;border-radius:999px;background:#009D51;color:#fff;font-size:14px;font-weight:500}
+#bar .done{display:inline-flex;align-items:center;height:36px;padding:0 16px;border-radius:999px;border:1px solid #DEDEDE;font-size:14px;font-weight:500;min-width:40px;justify-content:center}
+@media (max-width:639px){#bar{gap:4px;padding:0 4px;height:56px}#bar .ib{width:44px;height:44px}#bar .fi,#bar .lbl,#bar .dl,#bar .st .lbl{display:none}#bar .share{height:44px;padding:0 12px}#bar .done{height:44px;padding:0 12px}}
+"""
+
+
+def bar_html(name: str, version: str) -> str:
+    color = FILE_COLORS.get(name.rsplit(".", 1)[-1], "#717176")
+    status = (f'<span class="st">{svg("cloud", 16)}<span class="lbl">All changes saved</span></span>' if version == "v1"
+              else f'<span class="st" title="All changes saved">{svg("cloud", 18)}</span>')
+    about = f'<span class="ib{" sm" if version != "v1" else ""}" title="About this editor">{svg("info", 18 if version != "v1" else 20)}</span>'
+    right = (f'<span class="ib dl">{svg("download")}</span><span class="share">{svg("users", 16)}<span class="lbl">Share</span></span>{about}<span class="done">Done</span>'
+             if version == "v1" else
+             f'<span class="ib dl" title="Download">{svg("download")}</span>{about}<span class="share">{svg("users", 16)}<span class="lbl">Share</span></span><span class="done">Done</span>')
+    return (f'<header id="bar" class="{version}" data-drylab-bar="{version}"><span class="ib">{svg("back")}</span>'
+            f'<span class="fi" style="background:{color}"></span><span class="title" id="bar-title">{name}</span>{status}'
+            f'<span class="sp"></span>{right}</header>')
+
+
 # The Community events Drylab wires. ``events=none`` drops them.
 DRYLAB_EVENTS = """
   onRequestRename: (e) => ev('rename:' + e.data),
@@ -167,6 +232,9 @@ DRYLAB_EVENTS = """
   onRequestHistoryData: (e) => {{ ev('historyData:' + e.data); q('/history-data?name={qname}&s={qs}&v=' + e.data).then(d => window.docEditor.setHistoryData(d)); }},
   onRequestHistoryClose: () => ev('historyClose'),
 """
+# Layout v2: version history removed from the editor, so no
+# history events (ONLYOFFICE then drops File > Version History).
+DRYLAB_EVENTS_V2 = "\n".join(l for l in DRYLAB_EVENTS.splitlines() if "History" not in l)
 
 
 class H(BaseHTTPRequestHandler):
@@ -194,11 +262,13 @@ class H(BaseHTTPRequestHandler):
             return self._send(200, p.read_bytes(), "application/octet-stream")
         if u.path == "/editor":
             name, s = q["name"], q.get("s", "")
-            cfg = editor_config(name, s, q.get("lang", "en"), json.loads(q.get("cust", "{}")))
-            events = "" if q.get("events") == "none" else DRYLAB_EVENTS.format(
+            cfg = editor_config(name, s, q.get("lang", "en"), json.loads(q.get("cust", "{}")), q.get("cfg", "v2"))
+            events = "" if q.get("events") == "none" else (DRYLAB_EVENTS if q.get("cfg") == "v1" else DRYLAB_EVENTS_V2).format(
                 qname=urllib.parse.quote(name), qs=urllib.parse.quote(s)
             )
-            page = PAGE.format(name=name, ds=DS_BROWSER, cfg=json.dumps(cfg), events=events)
+            bar_v = q.get("bar", "v2")
+            bar = "" if bar_v == "none" else bar_html(name, bar_v)
+            page = PAGE.format(name=name, ds=DS_BROWSER, cfg=json.dumps(cfg), events=events, bar=bar, barcss=BAR_CSS if bar else "")
             return self._send(200, page, "text/html; charset=utf-8")
         if u.path == "/insert-image":
             return self._send(200, insert_image_payload())
