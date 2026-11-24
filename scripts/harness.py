@@ -161,7 +161,7 @@ PAGE = """<!doctype html><html><head><meta charset="utf-8"><title>harness {name}
 <style>html,body{{margin:0;height:100%}}body{{display:flex;flex-direction:column}}#ed-wrap{{flex:1;min-height:0}}#ed{{height:100%}}{barcss}</style>
 <script>window.__t0 = performance.now(); window.__events = [];</script>
 <script src="{ds}/web-apps/apps/api/documents/api.js"></script></head>
-<body>{bar}<div id="ed-wrap"><div id="ed"></div></div>{foot}<script>
+<body>{bar}<div id="ed-wrap"><div id="ed"></div></div>{foot}{about}<script>
 const cfg = {cfg};
 const q = (p) => fetch(p).then(r => r.json());
 const ev = (s) => window.__events.push(s);
@@ -173,6 +173,9 @@ cfg.events = {{
   onDocumentStateChange: (e) => ev('state:' + e.data),
   onDownloadAs: (e) => {{ ev('downloadAs:' + (e.data && e.data.fileType)); window.__downloadUrl = e.data && e.data.url; }},
   onMetaChange: (e) => ev('meta:' + JSON.stringify(e.data)),
+  // drylab.6: the About button posts onInternalMessage {{type: 'drylab:about'}};
+  // stand-in for the integrator's About dialog.
+  onInternalMessage: (e) => {{ const m = e.data || {{}}; if (m.type === 'drylab:about') {{ ev('about'); document.getElementById('about-dlg').hidden = false; }} }},
   {events}
 }};
 window.docEditor = new DocsAPI.DocEditor('ed', cfg);
@@ -184,9 +187,11 @@ window.docEditor = new DocsAPI.DocEditor('ed', cfg);
 # border, save state as a cloud icon, the same title x the theme's
 # --drylab-menu-indent assumes (93 px from 640 px up, 57 px below).
 # ``bar=v3``: 15 px title and Save instead of Done, same title x.
-# ``bar=v4`` (default ): no save cloud, no (i), a 16 px file icon in
+# ``bar=v4``: no save cloud, no (i), a 16 px file icon in
 # the 24 px slot, the muted notice line at the right (a thin line under the
-# editor below 1024 px). ``bar=none`` drops it. Static HTML: it only has to
+# editor below 1024 px). ``bar=v5`` (default ): v4 without the
+# notice line; the notice is in the About dialog the editor's About button
+# opens (ABOUT_HTML, a stand-in for the frontend's). ``bar=none`` drops it. Static HTML: it only has to
 # look like the real bar.
 ICONS = {
     "back": '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
@@ -226,22 +231,35 @@ BAR_CSS = """
 @media (min-width:1024px){#foot-note{display:none}}
 @media (max-width:1023px){#bar .note{display:none}}
 @media (max-width:639px){#bar.v4 .fi{display:none}}
+#about-dlg{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.4);font-family:Inter,'Segoe UI',Arial,sans-serif}
+#about-dlg[hidden]{display:none}
+#about-dlg .box{width:calc(100vw - 2rem);max-width:440px;background:#fff;border-radius:8px;padding:24px;box-sizing:border-box}
+#about-dlg h2{margin:0 0 8px;font-size:16px;font-weight:500;color:#000}
+#about-dlg p{margin:0 0 6px;font-size:14px;line-height:20px;color:#28282A}
+#about-dlg p.tm{color:#717176;font-size:13px}
+#about-dlg .ft{display:flex;justify-content:flex-end;margin-top:16px}
+#about-dlg button{height:32px;padding:0 14px;border-radius:999px;border:1px solid #DEDEDE;background:#fff;font-size:13px;font-weight:500}
 @media (max-width:639px){#bar{gap:4px;padding:0 4px;height:56px}#bar .ib{width:44px;height:44px}#bar .fi,#bar .lbl,#bar .dl,#bar .st .lbl{display:none}#bar .share{height:44px;padding:0 12px}#bar .done{height:44px;padding:0 12px}}
 """
 
 
 NOTE = "Based on the open-source ONLYOFFICE Docs (AGPL v3)"
+TRADEMARK = "ONLYOFFICE is a trademark of Ascensio System SIA."
+ABOUT_HTML = (f'<div id="about-dlg" role="dialog" aria-modal="true" aria-labelledby="about-t" hidden><div class="box">'
+              f'<h2 id="about-t">About</h2><p>{NOTE}</p><p class="tm">{TRADEMARK}</p>'
+              f'<div class="ft"><button type="button" onclick="this.closest(\'#about-dlg\').hidden=true">Close</button></div></div></div>')
 FILE_ICON_V4 = '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>'
 
 
 def bar_html(name: str, version: str) -> str:
     color = FILE_COLORS.get(name.rsplit(".", 1)[-1], "#717176")
-    if version == "v4":
+    if version in ("v4", "v5"):
         icon = (f'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{color}" stroke-width="2" '
                 f'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{FILE_ICON_V4}</svg>')
-        return (f'<header id="bar" class="v4" data-drylab-bar="v4"><span class="ib">{svg("back")}</span>'
+        note = f'<span class="note" title="{TRADEMARK}">{NOTE}</span>' if version == "v4" else ""
+        return (f'<header id="bar" class="v4" data-drylab-bar="{version}"><span class="ib">{svg("back")}</span>'
                 f'<span class="fi">{icon}</span><span class="title" id="bar-title">{name}</span>'
-                f'<span class="sp"></span><span class="note" title="ONLYOFFICE is a trademark of Ascensio System SIA.">{NOTE}</span>'
+                f'<span class="sp"></span>{note}'
                 f'<span class="ib dl" title="Download">{svg("download")}</span>'
                 f'<span class="share">{svg("users", 16)}<span class="lbl">Share</span></span><span class="done">Save</span></header>')
     status = (f'<span class="st">{svg("cloud", 16)}<span class="lbl">All changes saved</span></span>' if version == "v1"
@@ -301,10 +319,10 @@ class H(BaseHTTPRequestHandler):
             events = "" if q.get("events") == "none" else (DRYLAB_EVENTS if q.get("cfg") == "v1" else DRYLAB_EVENTS_V2).format(
                 qname=urllib.parse.quote(name), qs=urllib.parse.quote(s)
             )
-            bar_v = q.get("bar", "v4")
+            bar_v = q.get("bar", "v5")
             bar = "" if bar_v == "none" else bar_html(name, bar_v)
             foot = f'<div id="foot-note" title="ONLYOFFICE is a trademark of Ascensio System SIA.">{NOTE}</div>' if bar_v == "v4" else ""
-            page = PAGE.format(name=name, ds=DS_BROWSER, cfg=json.dumps(cfg), events=events, bar=bar, foot=foot, barcss=BAR_CSS if bar else "")
+            page = PAGE.format(name=name, ds=DS_BROWSER, cfg=json.dumps(cfg), events=events, bar=bar, foot=foot, about=ABOUT_HTML, barcss=BAR_CSS)
             return self._send(200, page, "text/html; charset=utf-8")
         if u.path == "/insert-image":
             return self._send(200, insert_image_payload())

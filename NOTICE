@@ -16,10 +16,12 @@ Date(s) of modification: 2026-11-23 (theme, image tag 10.0.0.1-drylab.1);
 2026-11-23 (layout v2, image tag 10.0.0.1-drylab.2); 2026-11-24 (polish,
 image tag 10.0.0.1-drylab.3); 2026-11-24 (notice line, image tag
 10.0.0.1-drylab.4); 2026-11-24 (spreadsheet and presentation look, image
-tag 10.0.0.1-drylab.5; includes one spreadsheet save fix)
+tag 10.0.0.1-drylab.5; includes one spreadsheet save fix); 2026-11-24
+(About button, image tag 10.0.0.1-drylab.6)
 
 What was modified (web-apps, plus two colour constants in sdkjs since
-drylab.5; server and binaries are unchanged)
+drylab.5 and one About button since drylab.6; server and binaries are
+unchanged)
 ---------------------------------------------------------------------------
 
 1. Added web-apps/apps/common/main/resources/drylab/drylab.css (source:
@@ -103,19 +105,36 @@ drylab.5; server and binaries are unchanged)
      saves from outside the editor. A comment line at the top of the file
      states the modification and its date (same script).
 
-Where the legal notices are shown (since 10.0.0.1-drylab.4)
+7. About button (2026-11-24, image tag 10.0.0.1-drylab.6):
+   - web-apps/apps/{documenteditor,spreadsheeteditor,presentationeditor}/
+     main/app/template/LeftMenu.template: one "About" button (ONLYOFFICE's
+     own (i) icon and localized "About" hint) added to the left strip;
+   - .../main/app/view/LeftMenu.js: the button's click calls the public
+     Gateway's internalMessage('drylab:about'), which posts
+     onInternalMessage {type: "drylab:about"} to the integrator page. It
+     does not open ONLYOFFICE's About panel and sends no document data;
+   - drylab.css: the button is pinned to the bottom of the strip, same
+     size and colour as the strip's other buttons.
+   Each changed file carries a "Modified by Drylab" line with the date
+   (script: scripts/patch-about.sh, run in the Dockerfile; the build fails
+   if an anchor is not found exactly once).
+
+Where the legal notices are shown (since 10.0.0.1-drylab.6)
 ------------------------------------------------------------
 
-With the About entry hidden, the integrator (Drylab) shows one line
-outside the editor frame, on every office file it opens for editing:
-"Based on the open-source ONLYOFFICE Docs (AGPL v3)". From 1024 px wide
-it sits at the right end of the bar directly above the editor; below
-that it is a thin line directly under the editor. Its tooltip reads
-"ONLYOFFICE is a trademark of Ascensio System SIA." It is translated
+With ONLYOFFICE's About entry hidden, every editor (document, spreadsheet,
+presentation) has one "About" (i) button at the bottom of its left strip.
+It opens the integrator's (Drylab's) About dialog, which reads
+"Based on the open-source ONLYOFFICE Docs (AGPL v3)" and
+"ONLYOFFICE is a trademark of Ascensio System SIA.", with one Close button. The dialog is translated
 into English, Vietnamese, Japanese and Chinese; "ONLYOFFICE Docs" and
-"AGPL v3" are never translated. (Until drylab.3 the integrator showed a
-longer notice in an "About this editor" (i) dialog; that dialog was
-removed by the integrator.)
+"AGPL v3" are never translated.
+
+History: until drylab.3 the integrator showed a longer notice in an
+"About this editor" (i) dialog in its header; from drylab.4 to drylab.5
+one muted line in its header bar, "Based on the open-source ONLYOFFICE
+Docs (AGPL v3)" (trademark sentence as tooltip). That line was moved into
+this button by the integrator.
 
 This NOTICE carries the complete notices: ONLYOFFICE Docs Community
 Edition 10.0.0.1, (c) Ascensio System SIA 2009-2026; modified by Drylab
@@ -129,7 +148,8 @@ a trademark of Ascensio System SIA.
 Inside the editor, the ONLYOFFICE logo stays visible in the menu row and
 File > Info still opens. The About panel itself (with Ascensio System
 SIA's details and this build's modified-version line) is not removed from
-the program; only its side-strip entry is hidden.
+the program; only its side-strip entry is hidden, and the Drylab About
+button at the bottom of the strip takes its place.
 
 Nothing else was changed. ONLYOFFICE's copyright notices, licence notices,
 source file headers and the logo are kept; the legal notices of the About

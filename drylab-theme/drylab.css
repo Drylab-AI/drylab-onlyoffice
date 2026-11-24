@@ -6,7 +6,8 @@
  * 2026-11-24 (polish, image tag 10.0.0.1-drylab.3),
  * 2026-11-24 (comments only, image tag 10.0.0.1-drylab.4) and
  * 2026-11-24 (spreadsheet and presentation look, image tag
- * 10.0.0.1-drylab.5). It
+ * 10.0.0.1-drylab.5) and 2026-11-24 (About button at the bottom of the
+ * left strip, image tag 10.0.0.1-drylab.6). It
  * restyles the editor chrome of ONLYOFFICE Docs, the original
  * software developed by Ascensio System SIA, and is part of a modified
  * version of that program licensed under the GNU AGPL v3 with the ONLYOFFICE
@@ -16,12 +17,13 @@
  * Rules kept here (licence gates, see NOTICE):
  * - The ONLYOFFICE logo stays visible: smaller and muted, never hidden or
  *   covered.
- * - Since drylab.3 the left-strip About entry is hidden (user request).
- *   Since drylab.4 the integrator shows one line outside the frame, "Based
- *   on the open-source ONLYOFFICE Docs (AGPL v3)" (see NOTICE, "Where the
- *   legal notices are shown"); the full notices are in NOTICE. The About
- *   panel itself is unchanged and still carries our modified-version line
- *   below.
+ * - Since drylab.3 ONLYOFFICE's left-strip About entry is hidden (user
+ *   request). Since drylab.6 one Drylab "About" (i) button sits at the
+ *   bottom of the left strip (scripts/patch-about.sh, section 5): it opens
+ *   the integrator's About dialog, "Based on the open-source ONLYOFFICE
+ *   Docs (AGPL v3)" + the trademark sentence (see NOTICE, "Where the legal
+ *   notices are shown"); the full notices are in NOTICE. The About panel
+ *   itself is unchanged and still carries our modified-version line below.
  * - ONLYOFFICE's "Feedback & Support", "Help" and "Suggest a Feature"
  *   entries are hidden by the integrator's config (customization.feedback,
  *   help and suggestFeature: false), not by CSS (checked by verify.sh).
@@ -471,8 +473,22 @@
   border-color: #ECECEC;
 }
 /* Comments and chat are off by config (permissions.comment / chat =
-   false), not by CSS; About is hidden in section 2 (drylab.3), so the strip
-   holds Search and Navigation (or Thumbnails / Spellcheck). */
+   false), not by CSS; ONLYOFFICE's About is hidden in section 2 (drylab.3),
+   so the strip holds Search and Navigation (or Thumbnails / Spellcheck) at
+   the top and, since drylab.6, the Drylab About button at the bottom. */
+/* Drylab About (patch-about.sh): pinned to the bottom of the strip, same
+   size, icon and hover as the other strip buttons. The strip
+   (.tool-menu-btns) is absolutely positioned and full height, so it is the
+   containing block; the button leaves the flow, so the top buttons and
+   ONLYOFFICE's "more" overflow button don't move. */
+:root body.theme-white #left-btn-drylab-about {
+  position: absolute;
+  bottom: 12px;
+  left: var(--layout-padding-x-side-panel, 0);
+  right: var(--layout-padding-x-side-panel, 0);
+  width: auto;
+  margin-bottom: 0;
+}
 :root body.theme-white .statusbar { box-shadow: inset 0 1px 0 #ECECEC; }
 :root body.theme-white .statusbar .status-label,
 :root body.theme-white .statusbar #label-zoom {
@@ -484,7 +500,7 @@
 /* ONLYOFFICE's own text, logo and copyright above stay untouched. */
 #about-menu-panel #id-about-licensor-info:after,
 #about-menu-panel #id-about-licensor-short:after {
-  content: "This is a modified version of ONLYOFFICE Docs, changed by Drylab on 2026-11-23 and 2026-11-24 (interface styling and layout, and the spreadsheet grid line and selection colours; build 10.0.0.1-drylab.5). Based on ONLYOFFICE Docs by Ascensio System SIA. Licensed under the GNU AGPL v3 with additional terms. Modified source: github.com/Drylab-AI/drylab-onlyoffice";
+  content: "This is a modified version of ONLYOFFICE Docs, changed by Drylab on 2026-11-23 and 2026-11-24 (interface styling and layout, the spreadsheet grid line and selection colours, and an About button; build 10.0.0.1-drylab.6). Based on ONLYOFFICE Docs by Ascensio System SIA. Licensed under the GNU AGPL v3 with additional terms. Modified source: github.com/Drylab-AI/drylab-onlyoffice";
   display: block;
   max-width: 420px;
   margin: 16px auto 0;

@@ -7,7 +7,8 @@
 # the theme keeps the logo visible and carries the modified notice, and
 # NOTICE says where the integrator's notice line is shown and carries the
 # complete notices (the in-editor About entry is hidden since drylab.3),
-# and the spreadsheet grid colour patch is served (drylab.5).
+# and the spreadsheet grid colour patch is served (drylab.5), and each
+# editor's left strip has the Drylab About button (drylab.6).
 #
 # With --browser it also runs the harness + headless agent-browser and
 # saves before/after screenshots and DOM facts to $OUT (see README).
@@ -18,7 +19,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 PORT="${PORT:-8085}"
 NAME="${NAME:-drylab-onlyoffice-verify}"
-IMAGE="${IMAGE:-drylab-onlyoffice:10.0.0.1-drylab.5}"
+IMAGE="${IMAGE:-drylab-onlyoffice:10.0.0.1-drylab.6}"
 OUT="${OUT:-$PWD/scripts/out/evidence}"
 BROWSER=0; KEEP=0
 for a in "$@"; do case "$a" in --browser) BROWSER=1 ;; --keep) KEEP=1 ;; esac; done
@@ -95,6 +96,21 @@ for enc in identity gzip; do
   grep -qF 'Modified by Drylab on' <<<"$body" || fail "spreadsheet Main.js ($enc) has no modified-file line"
 done
 ok "sdk-all.js has the Drylab grid colours, spreadsheet Main.js the blurfocus listener (plain + gzip, modified-file lines)"
+# drylab.6 (scripts/patch-about.sh): each editor's left menu template has
+# the About button and its view the internalMessage click, plain and gzip,
+# each with its modified-file line; NOTICE says where the notices now are.
+for e in documenteditor spreadsheeteditor presentationeditor; do
+  for enc in identity gzip; do
+    tpl=$(curl -sL --compressed -H "Accept-Encoding: $enc" "$base/$e/main/app/template/LeftMenu.template")
+    view=$(curl -sL --compressed -H "Accept-Encoding: $enc" "$base/$e/main/app/view/LeftMenu.js")
+    grep -qF 'id="left-btn-drylab-about"' <<<"$tpl" || fail "$e LeftMenu.template ($enc) lacks the About button"
+    grep -qF 'Modified by Drylab on' <<<"$tpl" || fail "$e LeftMenu.template ($enc) has no modified-file line"
+    grep -qF "internalMessage('drylab:about'" <<<"$view" || fail "$e LeftMenu.js ($enc) lacks the About click"
+    grep -qF 'Modified by Drylab on' <<<"$view" || fail "$e LeftMenu.js ($enc) has no modified-file line"
+  done
+done
+grep -qF '"About" (i) button at the bottom of its left strip' NOTICE || fail "NOTICE does not say the notices are behind the About button"
+ok "About button in each editor's left menu (template + view, plain + gzip, modified-file lines); NOTICE points at it"
 docker exec -i "$NAME" cmp -s /var/www/onlyoffice/documentserver/LICENSE.txt /dev/stdin < LICENSE || fail "LICENSE differs from the image's LICENSE.txt"
 ok "LICENSE matches the upstream LICENSE.txt"
 docker exec "$NAME" test -f /var/www/onlyoffice/documentserver/DRYLAB-NOTICE.txt || fail "NOTICE not in the image"
@@ -143,6 +159,24 @@ assert j["info"], "File > Info did not open"
 for k in ("about", "users", "mode", "close", "review", "protect", "support", "help", "suggest"):
     assert not j[k], k + " is shown"
 print("ok: File > Info opens; About, Feedback & Support, Help, Suggest a Feature, users, mode switch, close, Collaboration and Protection hidden")'
+  done
+  # drylab.6: the About button sits at the bottom of the strip, overlaps
+  # nothing, and its click reaches the integrator (harness About dialog).
+  for f in report.docx sales.xlsx deck.pptx; do
+    HARNESS_PORT="$HPORT" scripts/shoot.sh "$OUT" "about-${f##*.}" "$f" >/dev/null
+    agent-browser eval "$(cat scripts/about-check.js)" | python3 -c '
+import json, sys
+j = json.loads(json.loads(sys.stdin.read()))
+assert not j["issues"], j
+print("ok: About button at the bottom of the strip", j["btn"])'
+    agent-browser eval "(() => { document.querySelector('iframe').contentDocument.querySelector('#left-btn-drylab-about').click(); return 1 })()" >/dev/null
+    sleep 1
+    agent-browser eval "JSON.stringify({open: !document.getElementById('about-dlg').hidden, ev: window.__events.includes('about')})" | python3 -c '
+import json, sys
+j = json.loads(json.loads(sys.stdin.read()))
+assert j["open"] and j["ev"], j
+print("ok: About click opens the integrator dialog")'
+    agent-browser screenshot "$OUT/about-${f##*.}-open.png" >/dev/null
   done
   # drylab.5: spreadsheet / presentation look (formula bar, headers, sheet
   # tabs, thumbnails, notes) on a fresh open of each file.
