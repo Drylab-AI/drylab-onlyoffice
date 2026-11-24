@@ -61,6 +61,10 @@ docker run -d --name drylab-oo -p 127.0.0.1:8085:80 --add-host host.docker.inter
 
 These are the environment variables an integration needs (JWT in a custom header and in the body, private callback addresses allowed, WOPI off). Wait for `curl 127.0.0.1:8085/healthcheck` to return `true`, then about 30 s more while start-up regenerates the gzip copies.
 
+## Build
+
+Build the image with `docker build -t drylab-onlyoffice:<tag> .` (see "Build and run" above) and check it with `scripts/verify.sh`. Release tags follow `v10.0.0.1-drylab.<n>`; the Dockerfile label names the same tag.
+
 ## Verify
 
 ```bash
