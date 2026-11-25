@@ -22,7 +22,7 @@ ARG WEBAPPS=/var/www/onlyoffice/documentserver/web-apps/apps
 ARG DRYLAB_MODIFIED_DATE=2026-11-24
 
 LABEL org.opencontainers.image.title="drylab-onlyoffice" \
-      org.opencontainers.image.description="Modified ONLYOFFICE Docs Community 10.0.0.1 by Drylab (theme, interface patches, spreadsheet save fix; tag 10.0.0.1-drylab.6). Based on ONLYOFFICE Docs by Ascensio System SIA." \
+      org.opencontainers.image.description="Modified ONLYOFFICE Docs Community 10.0.0.1 by Drylab (theme, interface patches, spreadsheet save fix; tag 10.0.0.1-drylab.7). Based on ONLYOFFICE Docs by Ascensio System SIA." \
       org.opencontainers.image.licenses="AGPL-3.0-only" \
       org.opencontainers.image.source="https://github.com/Drylab-AI/drylab-onlyoffice" \
       org.opencontainers.image.base.name="onlyoffice/documentserver:10.0.0.1"
