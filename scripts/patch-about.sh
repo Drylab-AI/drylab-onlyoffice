@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# About button at the bottom of the left strip (build step drylab.6).
+# About button at the bottom of the left strip (build step).
 # Usage: patch-about.sh <web-apps/apps dir> <modified date>
 #
 # Why: the legal notice moved from a line in the integrator's header into
 # ONE "About" (i) icon pinned to the bottom of ONLYOFFICE's left strip, in
 # the document, spreadsheet and presentation editors. Clicking it does not
-# open ONLYOFFICE's own About panel (its entry stays hidden since drylab.3):
+# open ONLYOFFICE's own About panel (its entry stays hidden):
 # it asks the integrator to show its About dialog, through the public
 # Gateway's internalMessage, i.e. one
 #   window.parent.postMessage('{"event":"onInternalMessage",

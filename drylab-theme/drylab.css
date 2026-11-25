@@ -2,13 +2,7 @@
  * Drylab theme for ONLYOFFICE Docs Community 10.0.0.1 (web-apps).
  *
  * MODIFIED FILE NOTICE: this file was added by Drylab (Drylab-AI) on
- * 2026-11-23 and changed again on 2026-11-23,
- * 2026-11-24 (polish, image tag 10.0.0.1-drylab.3),
- * 2026-11-24 (comments only, image tag 10.0.0.1-drylab.4) and
- * 2026-11-24 (spreadsheet and presentation look, image tag
- * 10.0.0.1-drylab.5) and 2026-11-24 (About button at the bottom of the
- * left strip, image tag 10.0.0.1-drylab.6). It
- * restyles the editor chrome of ONLYOFFICE Docs, the original
+ * 2026-11-23 and changed on 2026-11-24. It restyles the editor chrome of ONLYOFFICE Docs, the original
  * software developed by Ascensio System SIA, and is part of a modified
  * version of that program licensed under the GNU AGPL v3 with the ONLYOFFICE
  * additional terms (see NOTICE and LICENSE in
@@ -17,12 +11,11 @@
  * Rules kept here (licence gates, see NOTICE):
  * - The ONLYOFFICE logo stays visible: smaller and muted, never hidden or
  *   covered.
- * - Since drylab.3 ONLYOFFICE's left-strip About entry is hidden (user
- *   request). Since drylab.6 one Drylab "About" (i) button sits at the
- *   bottom of the left strip (scripts/patch-about.sh, section 5): it opens
- *   the integrator's About dialog, "Based on the open-source ONLYOFFICE
- *   Docs (AGPL v3)" + the trademark sentence (see NOTICE, "Where the legal
- *   notices are shown"); the full notices are in NOTICE. The About panel
+ * - ONLYOFFICE's left-strip About entry is hidden; one Drylab "About" (i)
+ *   button sits at the bottom of the left strip instead
+ *   (scripts/patch-about.sh, section 5) and opens the integrator's About
+ *   dialog with the legal notices (see NOTICE, "Where the legal notices are
+ *   shown"). The About panel
  *   itself is unchanged and still carries our modified-version line below.
  * - ONLYOFFICE's "Feedback & Support", "Help" and "Suggest a Feature"
  *   entries are hidden by the integrator's config (customization.feedback,
@@ -212,10 +205,10 @@
 :root body.theme-white #toolbar .tabs li:has(> a[data-tab="review"]) {
   display: none !important;
 }
-/* Left strip About: hidden . Since
-   drylab.4 the integrator shows a one-line notice outside the frame
-   instead (NOTICE, "Where the legal notices are shown"); File > Info
-   still opens and the ONLYOFFICE logo stays visible in the menu row. */
+/* Left strip About: hidden; the Drylab About button at the bottom of the
+   strip opens the integrator's About dialog instead (NOTICE, "Where the
+   legal notices are shown"). File > Info still opens and the ONLYOFFICE
+   logo stays visible in the menu row. */
 :root body.theme-white #left-btn-about {
   display: none !important;
 }
@@ -473,9 +466,9 @@
   border-color: #ECECEC;
 }
 /* Comments and chat are off by config (permissions.comment / chat =
-   false), not by CSS; ONLYOFFICE's About is hidden in section 2 (drylab.3),
+   false), not by CSS; ONLYOFFICE's About is hidden in section 2,
    so the strip holds Search and Navigation (or Thumbnails / Spellcheck) at
-   the top and, since drylab.6, the Drylab About button at the bottom. */
+   the top and the Drylab About button at the bottom. */
 /* Drylab About (patch-about.sh): pinned to the bottom of the strip, same
    size, icon and hover as the other strip buttons. The strip
    (.tool-menu-btns) is absolutely positioned and full height, so it is the
@@ -512,7 +505,7 @@
   white-space: normal;
 }
 
-/* ---- 7. Spreadsheet: light grid, formula bar, sheet tabs (drylab.5) --- */
+/* ---- 7. Spreadsheet: light grid, formula bar, sheet tabs ---------- */
 /* Column letters / row numbers: drawn by sdkjs on the canvas, coloured
    from these theme variables (Themes.js passes them to asc_setSkin at
    start-up). Light grey, hairline borders, the selected header tinted with
@@ -623,7 +616,7 @@
   color: #717176;
 }
 
-/* ---- 8. Presentation: thumbnails and speaker notes (drylab.5) -------- */
+/* ---- 8. Presentation: thumbnails and speaker notes --------------- */
 /* Thumbnails: already white with the accent outline on the selected slide
    (--border-preview-select); a hairline separates them from the canvas.
    Speaker notes: a slim white strip under the slide, hairline above. */

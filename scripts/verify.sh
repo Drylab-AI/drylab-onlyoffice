@@ -6,9 +6,9 @@
 # comment, drylab.css is served, ONLYOFFICE's LICENSE.txt is untouched, and
 # the theme keeps the logo visible and carries the modified notice, and
 # NOTICE says where the integrator's notice line is shown and carries the
-# complete notices (the in-editor About entry is hidden since drylab.3),
-# and the spreadsheet grid colour patch is served (drylab.5), and each
-# editor's left strip has the Drylab About button (drylab.6).
+# complete notices (ONLYOFFICE's own About entry is hidden), the
+# spreadsheet patches are served, and each editor's left strip has the
+# Drylab About button.
 #
 # With --browser it also runs the harness + headless agent-browser and
 # saves before/after screenshots and DOM facts to $OUT (see README).
@@ -68,17 +68,18 @@ for sel, body in re.findall(r"([^{}]+)\{([^{}]*)\}", css):
     if re.search(r"display:none|visibility:hidden|width:0[;p]|height:0[;p]", b) or (m and float(m.group(1)) < 0.4):
         sys.exit(f"hides logo: {sel.strip()}")
 PY
-# drylab.3: the left-strip About entry is hidden on purpose. drylab.4: the
-# integrator shows one notice line outside the frame. NOTICE must say where
-# that line is, and must carry the complete notices itself.
-for needle in "Where the legal notices are shown" "Based on the open-source ONLYOFFICE Docs (AGPL v3)" \
+# ONLYOFFICE's own left-strip About entry is hidden on purpose; the About
+# button takes its place. NOTICE must say where the legal notices are, carry
+# the complete notices itself, and name the exact upstream revisions.
+for needle in "Where the legal notices are shown" "MODIFIED VERSION" "Ascensio System SIA" \
   "WITHOUT ANY WARRANTY" "(c) Ascensio System SIA" \
-  "https://github.com/Drylab-AI/drylab-onlyoffice" "https://github.com/ONLYOFFICE/DocumentServer" \
+  "https://github.com/Drylab-AI/drylab-onlyoffice" "ONLYOFFICE/web-apps               v10.0.0.169" \
+  "ONLYOFFICE/sdkjs                  v10.0.0.169" "ONLYOFFICE/server                 v10.0.0.169" \
   "ONLYOFFICE is a trademark of Ascensio System SIA"; do
   grep -qF "$needle" NOTICE || fail "NOTICE lacks: $needle"
 done
 ok "drylab.css served, modified notice present, logo not hidden; NOTICE says where the legal notices are"
-# drylab.5 (scripts/patch-js.sh): the served sdk-all.js carries the two
+# scripts/patch-js.sh: the served sdk-all.js carries the two
 # new grid constants (not the stock ones) and the spreadsheet Main.js the
 # blurfocus listener, plain and gzip, each with its modified-file line.
 sdk="http://127.0.0.1:${PORT}/sdkjs/cell/sdk-all.js"
@@ -96,7 +97,7 @@ for enc in identity gzip; do
   grep -qF 'Modified by Drylab on' <<<"$body" || fail "spreadsheet Main.js ($enc) has no modified-file line"
 done
 ok "sdk-all.js has the Drylab grid colours, spreadsheet Main.js the blurfocus listener (plain + gzip, modified-file lines)"
-# drylab.6 (scripts/patch-about.sh): each editor's left menu template has
+# scripts/patch-about.sh: each editor's left menu template has
 # the About button and its view the internalMessage click, plain and gzip,
 # each with its modified-file line; NOTICE says where the notices now are.
 for e in documenteditor spreadsheeteditor presentationeditor; do
@@ -160,7 +161,7 @@ for k in ("about", "users", "mode", "close", "review", "protect", "support", "he
     assert not j[k], k + " is shown"
 print("ok: File > Info opens; About, Feedback & Support, Help, Suggest a Feature, users, mode switch, close, Collaboration and Protection hidden")'
   done
-  # drylab.6: the About button sits at the bottom of the strip, overlaps
+  # The About button sits at the bottom of the strip, overlaps
   # nothing, and its click reaches the integrator (harness About dialog).
   for f in report.docx sales.xlsx deck.pptx; do
     HARNESS_PORT="$HPORT" scripts/shoot.sh "$OUT" "about-${f##*.}" "$f" >/dev/null
@@ -178,7 +179,7 @@ assert j["open"] and j["ev"], j
 print("ok: About click opens the integrator dialog")'
     agent-browser screenshot "$OUT/about-${f##*.}-open.png" >/dev/null
   done
-  # drylab.5: spreadsheet / presentation look (formula bar, headers, sheet
+  # Spreadsheet / presentation look (formula bar, headers, sheet
   # tabs, thumbnails, notes) on a fresh open of each file.
   for f in sales.xlsx deck.pptx; do
     HARNESS_PORT="$HPORT" scripts/shoot.sh "$OUT" "look-${f%%.*}" "$f" >/dev/null

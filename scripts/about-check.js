@@ -1,4 +1,4 @@
-// about-check.js (test only / drylab.6): run with agent-browser
+// about-check.js (test only): run with agent-browser
 // eval on a harness page. Checks the Drylab About button in the editor's
 // left strip: present, visible, at the bottom of the strip, same size as the
 // strip's other buttons, not overlapping any of them, ONLYOFFICE's own About

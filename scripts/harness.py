@@ -65,11 +65,11 @@ CUSTOMIZATION = {
 }
 # Same as the backend's document.permissions for an editor. :
 # ``protect: False`` drops the Protection tab (``cfg=v2`` = without
-# it, for before shots against drylab.2).
+# it, for comparison shots).
 PERMISSIONS = {"edit": True, "comment": False, "chat": False, "download": True, "print": True, "review": False, "protect": False}
 PERMISSIONS_V2 = {k: v for k, v in PERMISSIONS.items() if k != "protect"}
 # ``cfg=v1``: the config (rulers hidden, comments + chat on), for
-# before shots against the drylab.1 image.
+# comparison shots.
 CUSTOMIZATION_V1 = {k: v for k, v in CUSTOMIZATION.items() if k not in ("comments", "chat")}
 CUSTOMIZATION_V1["hideRulers"] = True
 PERMISSIONS_V1 = {"edit": True, "comment": True, "download": True, "print": True, "review": False}
@@ -173,7 +173,7 @@ cfg.events = {{
   onDocumentStateChange: (e) => ev('state:' + e.data),
   onDownloadAs: (e) => {{ ev('downloadAs:' + (e.data && e.data.fileType)); window.__downloadUrl = e.data && e.data.url; }},
   onMetaChange: (e) => ev('meta:' + JSON.stringify(e.data)),
-  // drylab.6: the About button posts onInternalMessage {{type: 'drylab:about'}};
+  // The About button posts onInternalMessage {{type: 'drylab:about'}};
   // stand-in for the integrator's About dialog.
   onInternalMessage: (e) => {{ const m = e.data || {{}}; if (m.type === 'drylab:about') {{ ev('about'); document.getElementById('about-dlg').hidden = false; }} }},
   {events}

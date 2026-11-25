@@ -2,168 +2,99 @@ drylab-onlyoffice: a modified version of ONLYOFFICE Docs Community
 ==================================================================
 
 This repository builds a MODIFIED VERSION of ONLYOFFICE Docs (Document
-Server) Community Edition 10.0.0.1, the original software developed by
-Ascensio System SIA (https://www.onlyoffice.com). It is based on the
-upstream image onlyoffice/documentserver:10.0.0.1 and on the upstream
-source at https://github.com/ONLYOFFICE/DocumentServer (tag v10.0.0.1).
+Server) Community Edition, the original software developed by Ascensio
+System SIA (https://www.onlyoffice.com), (c) Ascensio System SIA 2009-2026.
+
+It is based on the official image onlyoffice/documentserver:10.0.0.1
+(package onlyoffice-documentserver 10.0.0-169), built from the upstream
+source at these exact revisions:
+
+  ONLYOFFICE/web-apps               v10.0.0.169  493e500c56ec96ccaa0452ab092cbce23b6dcc2e
+  ONLYOFFICE/sdkjs                  v10.0.0.169  3679e0375a758d7dc59d31337a45461be3525ed8
+  ONLYOFFICE/server                 v10.0.0.169  f9a8df6e7c9aa388c0d525965923c803f4cbc071
+  ONLYOFFICE/core                   v10.0.0.169  76af764fcb777291098c73728044249b6893af6a
+  ONLYOFFICE/Docker-DocumentServer  v10.0.0.1    d59714446cde55a9f814928d1d984a6f43911bd7
+
+(all at https://github.com/ONLYOFFICE/<repository>).
 
 ONLYOFFICE is a trademark of Ascensio System SIA. This build is not an
-official ONLYOFFICE product and is not endorsed by Ascensio System SIA. We
-refer to it only as "based on ONLYOFFICE Docs".
+official ONLYOFFICE product and is not endorsed by Ascensio System SIA.
 
 Modified by: Drylab (GitHub organisation Drylab-AI)
-Date(s) of modification: 2026-11-23 (theme, image tag 10.0.0.1-drylab.1);
-2026-11-23 (layout v2, image tag 10.0.0.1-drylab.2); 2026-11-24 (polish,
-image tag 10.0.0.1-drylab.3); 2026-11-24 (notice line, image tag
-10.0.0.1-drylab.4); 2026-11-24 (spreadsheet and presentation look, image
-tag 10.0.0.1-drylab.5; includes one spreadsheet save fix); 2026-11-24
-(About button, image tag 10.0.0.1-drylab.6)
+Dates of modification: 2026-11-23 and 2026-11-24
+Source of this modified version: https://github.com/Drylab-AI/drylab-onlyoffice
 
-What was modified (web-apps, plus two colour constants in sdkjs since
-drylab.5 and one About button since drylab.6; server and binaries are
-unchanged)
----------------------------------------------------------------------------
+What was modified
+-----------------
+
+Only files served to the browser (web-apps, two constants and nothing else
+in sdkjs). The server, converter and binaries are unchanged. Each changed
+file carries a "Modified by Drylab" line stating the change and its date.
+The scripts below run in the Dockerfile; each fails the build if its anchor
+is not found exactly once.
 
 1. Added web-apps/apps/common/main/resources/drylab/drylab.css (source:
-   drylab-theme/drylab.css). A CSS theme for the light "White" interface
-   theme: white header row, tabs styled as plain text menu items, the
-   toolbar as one rounded light pill, a soft grey canvas around the page, a
-   slimmer status bar, a smaller and muted (still visible) ONLYOFFICE logo,
-   and Drylab's green as the accent colour. It also adds a line to the
-   About panel stating that this is a modified version, by whom and when,
-   that it is based on ONLYOFFICE Docs by Ascensio System SIA, the licence,
-   and where the modified source is.
+   drylab-theme/drylab.css): a light theme for the "White" interface
+   theme (flat header and tabs, one-row toolbar, soft canvas, smaller and
+   muted but always visible ONLYOFFICE logo, Sheets/Slides-style grid,
+   formula bar, sheet tabs and speaker notes, Drylab green accent). It also
+   adds a line to ONLYOFFICE's About panel stating that this is a modified
+   version, by whom, that it is based on ONLYOFFICE Docs by Ascensio System
+   SIA, the licence and where this source is.
 
-2. Edited web-apps/apps/{documenteditor,spreadsheeteditor,presentationeditor}
-   /main/index.html: one <link> to drylab.css inserted before </head>, with
-   an HTML comment stating the modification and its date (script:
-   scripts/patch-index.sh, run in the Dockerfile).
+2. web-apps/apps/{documenteditor,spreadsheeteditor,presentationeditor}/
+   main/index.html: one <link> to drylab.css (scripts/patch-index.sh).
 
-3. Regenerated the precompressed (.gz) copies of the touched files when the
-   image has them.
+3. sdkjs/cell/sdk-all.js: two colour constants, the cell grid lines
+   (rgb 202,202,202 -> 226,227,227) and the selection outline
+   (rgb 72,121,92 -> 0,157,81) (scripts/patch-js.sh).
 
-4. Layout v2 (2026-11-23, image tag 10.0.0.1-drylab.2), same CSS file,
-   still CSS only:
-   - the menu row (tabs) is plain 14 px text starting at the x of the
-     integrator's document title above the editor, with the ONLYOFFICE
-     logo moved to the right end of that row (still visible, 70 px wide,
-     60 % opacity, full on hover);
-   - ONLYOFFICE's header user avatar, header search and header Share
-     button are hidden (the integrator's bar has Share; search stays in
-     the side strip and on Ctrl+F);
-   - the toolbar is one 40 px rounded pill (radius 24 px) on a single row:
-     ONLYOFFICE's two stacked button rows sit side by side, its tall
-     buttons are icon-only (the same state ONLYOFFICE uses when a toolbar
-     is narrow), and the paragraph style gallery shows only the current
-     style plus its dropdown with every style. ONLYOFFICE's own overflow
-     ("more") menu still takes whatever does not fit;
-   - slimmer status bar (26 px) and a slightly stronger page border on the
-     grey canvas.
-   The About panel and its side-strip button are unchanged (in 10.0.0.1
-   that button is the only way into the About panel).
+4. web-apps/apps/spreadsheeteditor/main/app/controller/Main.js: one event
+   listener, so the public API call docEditor.blurFocus() also closes the
+   cell editor the way clicking another cell does; a cell still being typed
+   in is kept when the integrator saves (scripts/patch-js.sh).
 
-5. Polish (2026-11-24, image tag 10.0.0.1-drylab.3), same CSS file, still
-   CSS only:
-   - the toolbar row is fixed for tabs whose controls carry captions: the
-     View tab's "Zoom" caption sits beside its field instead of wrapping
-     below the pill, Layout's indent/spacing spinners and the
-     presentation galleries (shapes, transitions, animations) fit the
-     40 px pill, and two-line captions (Add Animation, Preview) become
-     icon buttons with their tooltip. ONLYOFFICE's own overflow ("more")
-     menu still collects what does not fit;
-   - menu row items are 13 px (were 14 px);
-   - hidden collaboration chrome the integrator does not use: the
-     Collaboration tab (comments, track changes, compare and chat are off
-     in the integrator's config), the users counter ("who is editing"),
-     the Editing/Viewing mode switch and the header close button.
-     Co-editing itself is unchanged. The Protection tab is removed by the
-     integrator's config (document.permissions.protect: false), not by CSS;
-   - ONLYOFFICE's About entry in the left strip is HIDDEN, at the request
-     of the integrator. See "Where the legal notices are
-     shown" below.
+5. web-apps/apps/{documenteditor,spreadsheeteditor,presentationeditor}/
+   main/app/template/LeftMenu.template and .../main/app/view/LeftMenu.js:
+   one "About" button at the bottom of the left strip. Its click calls the
+   public Gateway's internalMessage('drylab:about'), which asks the
+   integrator page to show its About dialog; it sends no document data
+   (scripts/patch-about.sh).
 
-6. Spreadsheet and presentation look (2026-11-24, image tag
-   10.0.0.1-drylab.5):
-   - drylab.css (CSS): spreadsheet column letters and row numbers in a
-     light grey with hairline borders and the selected header tinted
-     green (ONLYOFFICE's own --canvas-cell-title-* theme variables); the
-     formula bar as one white line under the toolbar (cell name, an "fx"
-     label in place of the function icon, the formula input); flat,
-     rounded sheet tabs with the active one tinted green; muted selection
-     stats in the status bar; in presentations a white speaker-notes
-     strip under the slide and a hairline beside the thumbnails;
-   - sdkjs/cell/sdk-all.js: exactly two colour constants changed, the
-     cell grid lines (rgb 202,202,202 -> 226,227,227) and the active-cell
-     / selection outline (rgb 72,121,92 -> 0,157,81). A comment line at
-     the top of the file states the modification and its date (script:
-     scripts/patch-js.sh, run in the Dockerfile; the build fails if the
-     constants are not found exactly once). Nothing else in sdkjs changes;
-   - web-apps/apps/spreadsheeteditor/main/app/controller/Main.js: one event
-     listener added. The public API call docEditor.blurFocus() now also
-     closes the spreadsheet cell editor the way clicking another cell does,
-     so a cell the user is still typing in is kept when the integrator
-     saves from outside the editor. A comment line at the top of the file
-     states the modification and its date (same script).
+6. The precompressed (.gz) copies of the touched files are regenerated so
+   the server never serves a stale stock copy.
 
-7. About button (2026-11-24, image tag 10.0.0.1-drylab.6):
-   - web-apps/apps/{documenteditor,spreadsheeteditor,presentationeditor}/
-     main/app/template/LeftMenu.template: one "About" button (ONLYOFFICE's
-     own (i) icon and localized "About" hint) added to the left strip;
-   - .../main/app/view/LeftMenu.js: the button's click calls the public
-     Gateway's internalMessage('drylab:about'), which posts
-     onInternalMessage {type: "drylab:about"} to the integrator page. It
-     does not open ONLYOFFICE's About panel and sends no document data;
-   - drylab.css: the button is pinned to the bottom of the strip, same
-     size and colour as the strip's other buttons.
-   Each changed file carries a "Modified by Drylab" line with the date
-   (script: scripts/patch-about.sh, run in the Dockerfile; the build fails
-   if an anchor is not found exactly once).
+7. Hidden by drylab.css (no Community configuration key exists for them):
+   the Collaboration tab, the users counter, the Editing/Viewing switch, the
+   header close button, the header avatar, search and Share, and
+   ONLYOFFICE's own About entry in the left strip (its place is taken by the
+   button in 5).
 
-Where the legal notices are shown (since 10.0.0.1-drylab.6)
-------------------------------------------------------------
+Where the legal notices are shown
+---------------------------------
 
-With ONLYOFFICE's About entry hidden, every editor (document, spreadsheet,
-presentation) has one "About" (i) button at the bottom of its left strip.
-It opens the integrator's (Drylab's) About dialog, which reads
-"Based on the open-source ONLYOFFICE Docs (AGPL v3)" and
-"ONLYOFFICE is a trademark of Ascensio System SIA.", with one Close button. The dialog is translated
-into English, Vietnamese, Japanese and Chinese; "ONLYOFFICE Docs" and
-"AGPL v3" are never translated.
-
-History: until drylab.3 the integrator showed a longer notice in an
-"About this editor" (i) dialog in its header; from drylab.4 to drylab.5
-one muted line in its header bar, "Based on the open-source ONLYOFFICE
-Docs (AGPL v3)" (trademark sentence as tooltip). That line was moved into
-this button by the integrator.
-
-This NOTICE carries the complete notices: ONLYOFFICE Docs Community
-Edition 10.0.0.1, (c) Ascensio System SIA 2009-2026; modified by Drylab
-on the dates above; free software under the GNU Affero General Public
-License v3 with additional terms, WITHOUT ANY WARRANTY; the source of
-the running version (https://github.com/Drylab-AI/drylab-onlyoffice) and
-upstream (https://github.com/ONLYOFFICE/DocumentServer); the licence text
-with the additional terms (LICENSE in this repository); and ONLYOFFICE is
-a trademark of Ascensio System SIA.
-
-Inside the editor, the ONLYOFFICE logo stays visible in the menu row and
-File > Info still opens. The About panel itself (with Ascensio System
-SIA's details and this build's modified-version line) is not removed from
-the program; only its side-strip entry is hidden, and the Drylab About
-button at the bottom of the strip takes its place.
+In every editor (document, spreadsheet, presentation) there is an
+"About" (i) button at the bottom of its left strip. It opens the integrating
+application's About dialog, which identifies ONLYOFFICE Docs by Ascensio
+System SIA as the original software, states that this is a modified
+version, and gives access to the licence and to this source. The
+ONLYOFFICE logo stays visible in the menu row, and ONLYOFFICE's About panel
+itself is not removed from the program.
 
 Nothing else was changed. ONLYOFFICE's copyright notices, licence notices,
-source file headers and the logo are kept; the legal notices of the About
-panel are shown by the integrator as described above.
+source file headers and logo are kept.
 
 Licence
 -------
 
-The Program, including these modifications, is licensed under the GNU
-Affero General Public License version 3 (see LICENSE, copied verbatim from
-the upstream image's /var/www/onlyoffice/documentserver/LICENSE.txt), with
-the additional terms below, copied verbatim from that file. Under AGPL s13,
-every user who interacts with this modified version over a network must be
-offered its Corresponding Source; this repository is that source.
+The Program, including these modifications, is free software licensed
+under the GNU Affero General Public License version 3 (see LICENSE, copied
+verbatim from the upstream image's
+/var/www/onlyoffice/documentserver/LICENSE.txt), with the additional terms
+below, copied verbatim from that file. It is distributed
+WITHOUT ANY WARRANTY; see sections 15 and 16 of the License. Under section 13, every
+user who interacts with this modified version over a network is offered
+its Corresponding Source; this repository is that source.
 
 Additional terms (verbatim from upstream LICENSE.txt)
 ------------------------------------------------------

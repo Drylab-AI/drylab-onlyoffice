@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spreadsheet editor JS changes (build step drylab.5).
+# Spreadsheet editor JS changes (build step).
 # Usage: patch-js.sh <documentserver dir> <modified date>
 #
 # Two small, separate changes; each must find its pattern exactly once or
